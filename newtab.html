@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Tab</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Background layers -->
+  <div id="bg-photo" role="presentation"></div>
+  <div id="bg-overlay" role="presentation"></div>
+
+  <!-- ============ Top bar ============ -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="brand" id="brand" title="DayStart">
+        <span class="brand-dot"></span><span class="brand-name">DayStart</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <!-- Weather widget -->
+      <div id="weather" class="weather" tabindex="0" role="button" aria-label="Weather details">
+        <span id="weather-icon" class="weather-icon">&#9728;</span>
+        <span id="weather-temp" class="weather-temp">--&deg;</span>
+        <div id="weather-detail" class="weather-detail">
+          <div id="weather-desc" class="weather-desc">Locating&hellip;</div>
+          <div id="weather-forecast" class="weather-forecast"></div>
+        </div>
+      </div>
+      <button id="btn-dark" class="icon-btn" title="Toggle dark mode (D)" aria-label="Toggle dark mode">&#9789;</button>
+      <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Open settings">&#9881;</button>
+    </div>
+  </header>
+
+  <!-- ============ Center: clock / greeting / focus ============ -->
+  <main class="center">
+    <div class="clock-wrap">
+      <div id="clock" class="clock">--:--</div>
+      <div id="date" class="date">&nbsp;</div>
+    </div>
+    <h1 id="greeting" class="greeting">Hello.</h1>
+    <div id="focus-wrap" class="focus-wrap">
+      <div id="focus-prompt" class="focus-prompt">What is your main focus for today?</div>
+      <div class="focus-row">
+        <span class="focus-bullet" aria-hidden="true">&#9675;</span>
+        <input id="focus-input" class="focus-input" type="text" maxlength="120"
+               placeholder="Type your focus and press Enter" autocomplete="off">
+        <button id="focus-done" class="focus-done" title="Mark done" aria-label="Mark focus done">&#10003;</button>
+        <button id="focus-clear" class="focus-clear" title="Clear focus" aria-label="Clear focus">&#10005;</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ Bottom: search ============ -->
+  <div class="search-wrap" id="search-wrap">
+    <form id="search-form" class="search" role="search">
+      <span class="search-icon" aria-hidden="true">&#128269;</span>
+      <input id="search-input" type="text" placeholder="Search the web&hellip;" autocomplete="off" aria-label="Search the web">
+      <button type="button" id="search-engine-btn" class="search-engine" title="Change search engine">Google</button>
+    </form>
+  </div>
+
+  <!-- ============ Bottom-left: quick links ============ -->
+  <aside class="links" id="links-panel">
+    <div class="links-head">
+      <span class="widget-title">Shortcuts</span>
+      <button id="links-add" class="mini-btn" title="Add shortcut">+</button>
+    </div>
+    <div id="links-grid" class="links-grid"></div>
+  </aside>
+
+  <!-- ============ Bottom-right: quote ============ -->
+  <aside class="quote-box" id="quote-box">
+    <div id="quote-text" class="quote-text">&ldquo;The secret of getting ahead is getting started.&rdquo;</div>
+    <div id="quote-author" class="quote-author">&mdash; Mark Twain</div>
+  </aside>
+
+  <!-- ============ Top-left: todo ============ -->
+  <aside class="todo" id="todo-panel">
+    <div class="panel-head">
+      <span class="widget-title">Today</span>
+      <span id="todo-count" class="todo-count">0</span>
+      <button id="todo-clear-done" class="mini-btn" title="Clear completed">&#10003;</button>
+    </div>
+    <div id="todo-list" class="todo-list" role="list"></div>
+    <div class="todo-input-row">
+      <input id="todo-input" type="text" placeholder="Add a task&hellip;" maxlength="200" autocomplete="off">
+      <button id="todo-add" class="mini-btn" title="Add task">+</button>
+    </div>
+  </aside>
+
+  <!-- ============ Top-left under todo: habits ============ -->
+  <aside class="habits" id="habits-panel">
+    <div class="panel-head">
+      <span class="widget-title">Habits</span>
+      <button id="habits-add" class="mini-btn" title="Add habit">+</button>
+    </div>
+    <div id="habits-list" class="habits-list"></div>
+  </aside>
+
+  <!-- ============ Floating dock ============ -->
+  <nav class="dock" id="dock" aria-label="Tools">
+    <button class="dock-btn" id="btn-pomodoro" title="Pomodoro timer (P)" aria-label="Pomodoro timer">&#9201;</button>
+    <button class="dock-btn" id="btn-notes" title="Notes (N)" aria-label="Notes">&#128221;</button>
+    <button class="dock-btn" id="btn-sounds" title="Soundscapes (S)" aria-label="Soundscapes">&#127911;</button>
+    <button class="dock-btn" id="btn-zen" title="Zen mode (Z)" aria-label="Zen mode">&#129496;</button>
+  </nav>
+
+  <!-- ============ Side panels ============ -->
+
+  <!-- Pomodoro -->
+  <section class="side-panel" id="panel-pomodoro" aria-hidden="true">
+    <div class="panel-top">
+      <span class="panel-title">Pomodoro</span>
+      <button class="panel-close" data-close="panel-pomodoro" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="pomo-face" id="pomo-face">25:00</div>
+    <div class="pomo-mode" id="pomo-mode">Focus session</div>
+    <div class="pomo-ring"><svg viewBox="0 0 120 120" aria-hidden="true">
+      <circle class="ring-bg" cx="60" cy="60" r="54"></circle>
+      <circle class="ring-fg" id="pomo-ring" cx="60" cy="60" r="54"></circle>
+    </svg></div>
+    <div class="pomo-controls">
+      <button id="pomo-start" class="btn primary">Start</button>
+      <button id="pomo-reset" class="btn">Reset</button>
+      <button id="pomo-skip" class="btn">Skip</button>
+    </div>
+    <div class="pomo-stats">
+      <span>Sessions today: <strong id="pomo-count">0</strong></span>
+    </div>
+    <div class="pomo-config">
+      <label>Focus <input type="number" id="pomo-focus-min" min="5" max="90" step="5" value="25"> min</label>
+      <label>Break <input type="number" id="pomo-break-min" min="1" max="30" step="1" value="5"> min</label>
+    </div>
+  </section>
+
+  <!-- Notes -->
+  <section class="side-panel" id="panel-notes" aria-hidden="true">
+    <div class="panel-top">
+      <span class="panel-title">Notes</span>
+      <button class="panel-close" data-close="panel-notes" aria-label="Close">&#10005;</button>
+    </div>
+    <textarea id="notes-area" class="notes-area" placeholder="Jot down anything&hellip; (saved automatically)"></textarea>
+    <div class="notes-foot"><span id="notes-saved">Saved</span></div>
+  </section>
+
+  <!-- Soundscapes -->
+  <section class="side-panel" id="panel-sounds" aria-hidden="true">
+    <div class="panel-top">
+      <span class="panel-title">Soundscapes</span>
+      <button class="panel-close" data-close="panel-sounds" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="sound-grid">
+      <button class="sound-btn" data-sound="rain">&#127783; Rain</button>
+      <button class="sound-btn" data-sound="ocean">&#127754; Ocean</button>
+      <button class="sound-btn" data-sound="stream">&#127754; Stream</button>
+      <button class="sound-btn" data-sound="wind">&#127788; Wind</button>
+      <button class="sound-btn" data-sound="fire">&#128293; Fireplace</button>
+      <button class="sound-btn" data-sound="night">&#127769; Night</button>
+    </div>
+    <div class="sound-volume">
+      <label for="sound-volume">Volume</label>
+      <input type="range" id="sound-volume" min="0" max="100" value="60">
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section class="side-panel" id="panel-settings" aria-hidden="true">
+    <div class="panel-top">
+      <span class="panel-title">Settings</span>
+      <button class="panel-close" data-close="panel-settings" aria-label="Close">&#10005;</button>
+    </div>
+
+    <div class="settings-group">
+      <h3>Personal</h3>
+      <label class="field"><span>Your name</span>
+        <input type="text" id="set-name" maxlength="40" placeholder="Name"></label>
+      <label class="field"><span>Clock format</span>
+        <select id="set-clock">
+          <option value="24">24-hour</option>
+          <option value="12">12-hour</option>
+        </select></label>
+      <label class="field"><span>Show seconds</span>
+        <input type="checkbox" id="set-seconds"></label>
+    </div>
+
+    <div class="settings-group">
+      <h3>Widgets</h3>
+      <label class="check"><input type="checkbox" id="set-w-todo" checked> Todo list</label>
+      <label class="check"><input type="checkbox" id="set-w-habits" checked> Habits</label>
+      <label class="check"><input type="checkbox" id="set-w-weather" checked> Weather</label>
+      <label class="check"><input type="checkbox" id="set-w-links" checked> Shortcuts</label>
+      <label class="check"><input type="checkbox" id="set-w-quote" checked> Quote of the day</label>
+      <label class="check"><input type="checkbox" id="set-w-focus" checked> Daily focus</label>
+      <label class="check"><input type="checkbox" id="set-w-search" checked> Search bar</label>
+    </div>
+
+    <div class="settings-group">
+      <h3>Background</h3>
+      <label class="field"><span>Mode</span>
+        <select id="set-bg-mode">
+          <option value="daily">New photo every day</option>
+          <option value="random">Random photo</option>
+          <option value="gradient">Gradient (offline)</option>
+        </select></label>
+      <div class="swatches" id="bg-swatches"></div>
+    </div>
+
+    <div class="settings-group">
+      <h3>Weather</h3>
+      <label class="field"><span>Units</span>
+        <select id="set-units">
+          <option value="c">Celsius</option>
+          <option value="f">Fahrenheit</option>
+        </select></label>
+      <label class="field"><span>City (leave blank to auto-detect)</span>
+        <input type="text" id="set-city" maxlength="60" placeholder="e.g. Dhaka"></label>
+    </div>
+
+    <div class="settings-group">
+      <h3>Data</h3>
+      <div class="btn-row">
+        <button id="btn-export" class="btn">Export data</button>
+        <button id="btn-import" class="btn">Import data</button>
+        <button id="btn-reset" class="btn danger">Reset everything</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json" hidden>
+    </div>
+
+    <div class="settings-foot">
+      <span id="storage-note"></span>
+    </div>
+  </section>
+
+  <!-- Onboarding -->
+  <div id="onboarding" class="onboarding" hidden>
+    <div class="onboard-card">
+      <div class="onboard-icon">&#127749;</div>
+      <h2>Welcome to DayStart</h2>
+      <p>A calm start to every tab. Set your name and make it yours.</p>
+      <input type="text" id="onboard-name" maxlength="40" placeholder="Your first name" autocomplete="off">
+      <button id="onboard-go" class="btn primary">Get started</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/clock.js"></script>
+  <script src="js/focus.js"></script>
+  <script src="js/todo.js"></script>
+  <script src="js/habits.js"></script>
+  <script src="js/links.js"></script>
+  <script src="js/quote.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/background.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/pomodoro.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/panels.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

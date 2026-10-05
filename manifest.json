@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "DayStart — New Tab Focus Dashboard",
+  "short_name": "DayStart",
+  "version": "1.0.0",
+  "description": "Transform every new tab into a calm, focused dashboard: greeting, daily focus, tasks, weather, quick links, habits, pomodoro, notes and soundscapes.",
+  "author": "DayStart Contributors",
+  "homepage_url": "https://github.com/daystart/daystart",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": [
+    "storage",
+    "geolocation",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://api.open-meteo.com/*",
+    "https://geocoding-api.open-meteo.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:;"
+  },
+  "offline_enabled": true
+}
