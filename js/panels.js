@@ -7,6 +7,7 @@ const Panels = (() => {
     "panel-pomodoro": "btn-pomodoro",
     "panel-notes": "btn-notes",
     "panel-sounds": "btn-sounds",
+    "panel-countdowns": "btn-countdowns",
     "panel-settings": "btn-settings"
   };
 
@@ -43,6 +44,7 @@ const Panels = (() => {
     document.getElementById("btn-pomodoro").addEventListener("click", () => toggle("panel-pomodoro"));
     document.getElementById("btn-notes").addEventListener("click", () => toggle("panel-notes"));
     document.getElementById("btn-sounds").addEventListener("click", () => toggle("panel-sounds"));
+    document.getElementById("btn-countdowns").addEventListener("click", () => toggle("panel-countdowns"));
     document.getElementById("btn-settings").addEventListener("click", () => toggle("panel-settings"));
   }
 

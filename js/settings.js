@@ -17,9 +17,11 @@ const Settings = (() => {
     $("set-name").value = await Store.getSetting("userName", "");
     $("set-clock").value = await Store.getSetting("clockFormat", "24");
     $("set-seconds").checked = await Store.getSetting("clockSeconds", false);
+    $("set-theme").value = await Store.getSetting("themeMode", "light");
     $("set-units").value = await Store.getSetting("units", "c");
     $("set-city").value = await Store.getSetting("city", "");
     $("set-bg-mode").value = await Store.getSetting("bgMode", "daily");
+    $("set-bg-url").value = await Store.getSetting("bgCustomUrl", "");
 
     const widgets = await Store.getSetting("widgets", {});
     const defaults = ["todo", "habits", "weather", "links", "quote", "focus", "search"];
@@ -75,6 +77,10 @@ const Settings = (() => {
       await Store.setSetting("clockSeconds", e.target.checked);
       Clock.refreshFormat();
     });
+    $("set-theme").addEventListener("change", async (e) => {
+      await Store.setSetting("themeMode", e.target.value);
+      await App.applyTheme();
+    });
     $("set-units").addEventListener("change", async (e) => {
       await Store.setSetting("units", e.target.value);
       Weather.onUnitsChanged();
@@ -86,6 +92,10 @@ const Settings = (() => {
     $("set-bg-mode").addEventListener("change", async (e) => {
       await Store.setSetting("bgMode", e.target.value);
       Background.refresh();
+    });
+    $("set-bg-url").addEventListener("change", async (e) => {
+      await Store.setSetting("bgCustomUrl", e.target.value.trim());
+      if ($("set-bg-mode").value === "custom") Background.refresh();
     });
 
     ["todo", "habits", "weather", "links", "quote", "focus", "search"].forEach((w) => {

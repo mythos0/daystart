@@ -7,7 +7,7 @@ const Habits = (() => {
   const $ = (id) => document.getElementById(id);
 
   async function load() {
-    habits = await Store.getData("habits", []);
+    habits = await Store.getSynced("habits", []);
     rollDay();
     render();
   }
@@ -29,7 +29,7 @@ const Habits = (() => {
   }
 
   async function persist() {
-    await Store.setData("habits", habits);
+    await Store.setSetting("habits", habits);
   }
 
   function render() {
@@ -95,7 +95,7 @@ const Habits = (() => {
   }
 
   async function add(name) {
-    name = name.trim();
+    name = (name || "").trim();
     if (!name) return;
     habits.push({ name, streak: 0, doneToday: false, lastDone: null, lastStreakDay: null });
     await persist();
@@ -109,9 +109,14 @@ const Habits = (() => {
   }
 
   function bind() {
-    $("habits-add").addEventListener("click", () => {
-      const name = prompt("New habit to build:");
-      if (name) add(name);
+    const commit = async () => {
+      await add($("habits-input").value);
+      $("habits-input").value = "";
+      $("habits-input").focus();
+    };
+    $("habits-add").addEventListener("click", commit);
+    $("habits-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") commit();
     });
   }
 

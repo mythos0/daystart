@@ -47,6 +47,18 @@ const Store = (() => {
     getData: (key, fallback) => get("local", key, fallback),
     setData: (key, value) => set("local", key, value),
     removeData: (key) => remove("local", key),
+    // Synced data with one-time local→sync migration (v1.0 → v1.1 upgrade path)
+    getSynced: async (key, fallback) => {
+      const synced = await get("sync", key, undefined);
+      if (synced !== undefined) return synced;
+      const legacy = await get("local", key, undefined);
+      if (legacy !== undefined) {
+        await set("sync", key, legacy);
+        await remove("local", key);
+        return legacy;
+      }
+      return fallback;
+    },
     // Export everything
     exportAll: async () => {
       const out = { version: 1, exported: new Date().toISOString(), sync: {}, local: {} };

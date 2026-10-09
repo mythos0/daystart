@@ -239,10 +239,20 @@ body.zen #bg-overlay { background: rgba(10, 12, 20, 0.35); }
 .panel-head .todo-count + .mini-btn { margin-left: auto; }
 .panel-head .mini-btn:last-child { margin-left: 0; }
 
-/* ---------- Todo ---------- */
-.todo, .habits {
-  position: fixed; left: 26px; z-index: 15;
+/* ---------- Left column stack (todo / habits / shortcuts) ---------- */
+.left-column {
+  position: fixed;
+  left: 26px; top: 84px; bottom: 26px;
   width: 280px;
+  display: flex; flex-direction: column; gap: 12px;
+  z-index: 15;
+  pointer-events: none;
+  overflow: visible;
+}
+.left-column > * { pointer-events: auto; flex-shrink: 0; }
+
+.todo, .habits, .links {
+  width: 100%;
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
@@ -250,13 +260,15 @@ body.zen #bg-overlay { background: rgba(10, 12, 20, 0.35); }
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: var(--shadow);
-  transition: transform 0.3s ease, opacity 0.3s ease;
 }
-.todo { top: 84px; max-height: 44vh; }
-.habits { bottom: 26px; }
+.todo {
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.left-column > .todo { flex: 0 1 auto; }
 
 .todo-list {
-  overflow-y: auto; max-height: calc(44vh - 92px);
+  overflow-y: auto; max-height: 30vh;
   display: flex; flex-direction: column; gap: 4px;
   scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;
 }
@@ -329,18 +341,67 @@ body.zen #bg-overlay { background: rgba(10, 12, 20, 0.35); }
 .habit-del:hover { color: var(--danger) !important; }
 .habit-row.done .habit-name { opacity: 0.75; }
 
-/* ---------- Quick links ---------- */
-.links {
-  position: fixed; left: 26px; bottom: 96px; z-index: 14;
-  width: 280px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--shadow);
+/* ---------- Countdowns ---------- */
+.countdown-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-bottom: 14px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(255, 180, 94, 0.16);
+  border: 1px solid rgba(255, 180, 94, 0.35);
+  color: #ffd9a8;
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-shadow: none;
 }
+.countdowns-list {
+  display: flex; flex-direction: column; gap: 6px;
+  overflow-y: auto; flex: 1;
+}
+.countdown-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.countdown-row.past { opacity: 0.45; }
+.countdown-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.countdown-name { font-size: 13.5px; overflow-wrap: anywhere; }
+.countdown-date { font-size: 11px; color: var(--text-dim); }
+.countdown-badge {
+  flex: none;
+  font-size: 11px; font-weight: 600;
+  color: var(--accent);
+  background: rgba(255,180,94,0.14);
+  padding: 3px 10px; border-radius: 999px;
+}
+.countdown-input-row {
+  display: flex; gap: 6px; margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+#countdown-name-input {
+  flex: 1; min-width: 0;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px; color: var(--text);
+  padding: 8px 10px; font-size: 12.5px; outline: none;
+  font-family: var(--font-sans);
+}
+#countdown-name-input:focus { border-color: var(--accent); }
+#countdown-name-input::placeholder { color: rgba(255,255,255,0.4); }
+#countdown-date-input {
+  width: 118px; flex: none;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px; color: var(--text);
+  padding: 7px 8px; font-size: 12px; outline: none;
+  font-family: var(--font-sans);
+  color-scheme: dark;
+}
+
+/* ---------- Quick links ---------- */
 .links-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .links-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
@@ -381,6 +442,22 @@ body.zen #bg-overlay { background: rgba(10, 12, 20, 0.35); }
   grid-column: 1 / -1; text-align: center;
   font-size: 11.5px; color: var(--text-dim); padding: 8px 0;
 }
+.links-input-row {
+  display: flex; gap: 6px; margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
+.links-input-row input {
+  min-width: 0; background: rgba(255,255,255,0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px; color: var(--text);
+  padding: 7px 9px; font-size: 11.5px; outline: none;
+  font-family: var(--font-sans);
+}
+.links-input-row input:focus { border-color: var(--accent); }
+.links-input-row input::placeholder { color: rgba(255,255,255,0.4); }
+#links-url-input { flex: 1.4; }
+#links-name-input { flex: 1; }
 
 /* ---------- Quote ---------- */
 .quote-box {
@@ -617,13 +694,11 @@ body.zen #bg-overlay { background: rgba(10, 12, 20, 0.35); }
 @keyframes fadeSlide { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ---------- Zen mode ---------- */
-body.zen .todo, body.zen .habits, body.zen .links, body.zen .quote-box,
+body.zen .left-column, body.zen .quote-box,
 body.zen .search-wrap, body.zen .topbar, body.zen .dock {
   opacity: 0; pointer-events: none;
   transition: opacity 0.4s ease;
 }
-body.zen .todo, body.zen .habits, body.zen .links, body.zen .quote-box,
-body.zen .search-wrap, body.zen .topbar, body.zen .dock { transition: opacity 0.4s ease; }
 
 /* ---------- Weather detail popover ---------- */
 .weather.open .weather-detail { display: flex; }
@@ -641,10 +716,9 @@ body.zen .search-wrap, body.zen .topbar, body.zen .dock { transition: opacity 0.
 @media (max-width: 900px) {
   .todo { display: none !important; }
   .quote-box { max-width: 220px; }
-  .links { width: 240px; bottom: 90px; }
 }
 @media (max-width: 700px) {
-  .links { display: none !important; }
+  .left-column { display: none !important; }
   .quote-box { display: none !important; }
   .weather-detail { display: none; }
 }

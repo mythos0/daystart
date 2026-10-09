@@ -31,16 +31,29 @@ const App = (() => {
     $("weather").style.visibility = widgets.weather === false ? "hidden" : "visible";
   }
 
-  async function applyDarkMode() {
-    const dark = await Store.getSetting("darkMode", false);
-    document.body.classList.toggle("dark", !!dark);
+  function isNightNow() {
+    const h = new Date().getHours();
+    return h >= 19 || h < 6;
+  }
+
+  /* Theme engine: light | dark | auto. Migrates legacy darkMode boolean. */
+  async function applyTheme() {
+    let mode = await Store.getSetting("themeMode", null);
+    if (mode === null) {
+      const legacyDark = await Store.getSetting("darkMode", false);
+      mode = legacyDark ? "dark" : "light";
+      await Store.setSetting("themeMode", mode);
+    }
+    const dark = mode === "dark" || (mode === "auto" && isNightNow());
+    document.body.classList.toggle("dark", dark);
     $("btn-dark").textContent = dark ? "\u2600" : "\u263D";
   }
 
   async function toggleDark() {
-    const dark = !(await Store.getSetting("darkMode", false));
-    await Store.setSetting("darkMode", dark);
-    applyDarkMode();
+    const mode = await Store.getSetting("themeMode", "light");
+    const currentlyDark = mode === "dark" || (mode === "auto" && isNightNow());
+    await Store.setSetting("themeMode", currentlyDark ? "light" : "dark");
+    applyTheme();
   }
 
   async function toggleZen() {
@@ -86,17 +99,22 @@ const App = (() => {
       // Ignore when typing into an input
       const tag = document.activeElement && document.activeElement.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
-        if (e.key === "Escape") document.activeElement.blur();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          document.activeElement.blur();
+          Panels.close();
+        }
         return;
       }
       switch (e.key.toLowerCase()) {
-        case "t": $("todo-input").focus(); break;
-        case "f": $("focus-input").focus(); break;
-        case "s": if (!Panels.isOpen("panel-sounds")) Search.focus(); break;
-        case "n": Panels.toggle("panel-notes"); break;
-        case "p": Panels.toggle("panel-pomodoro"); break;
-        case "z": toggleZen(); break;
-        case "d": toggleDark(); break;
+        case "t": e.preventDefault(); $("todo-input").focus(); break;
+        case "f": e.preventDefault(); $("focus-input").focus(); break;
+        case "s": e.preventDefault(); if (!Panels.isOpen("panel-sounds")) Search.focus(); break;
+        case "n": e.preventDefault(); Panels.toggle("panel-notes"); break;
+        case "p": e.preventDefault(); Panels.toggle("panel-pomodoro"); break;
+        case "c": e.preventDefault(); Panels.toggle("panel-countdowns"); break;
+        case "z": e.preventDefault(); toggleZen(); break;
+        case "d": e.preventDefault(); toggleDark(); break;
         case "escape": Panels.close(); break;
       }
     });
@@ -126,16 +144,20 @@ const App = (() => {
       Pomodoro.init(),
       Notes.init(),
       Sounds.init(),
+      Countdowns.init(),
       Settings.init()
     ]);
 
     await applyWidgetVisibility();
-    await applyDarkMode();
+    await applyTheme();
     await restoreZen();
     await maybeOnboard();
+
+    // Keep auto theme in sync while the tab stays open
+    setInterval(applyTheme, 60000);
   }
 
   document.addEventListener("DOMContentLoaded", init);
 
-  return { toast, applyWidgetVisibility };
+  return { toast, applyWidgetVisibility, applyTheme };
 })();

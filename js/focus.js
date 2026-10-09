@@ -7,7 +7,7 @@ const Focus = (() => {
   const $ = (id) => document.getElementById(id);
 
   async function load() {
-    const saved = await Store.getData("focus", null);
+    const saved = await Store.getSynced("focus", null);
     if (saved && saved.date === todayKey()) {
       state = saved;
     } else if (saved && saved.text && !saved.date) {
@@ -20,7 +20,7 @@ const Focus = (() => {
   }
 
   async function save() {
-    await Store.setData("focus", state);
+    await Store.setSetting("focus", state);
   }
 
   function render() {

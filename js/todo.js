@@ -6,12 +6,12 @@ const Todo = (() => {
   const $ = (id) => document.getElementById(id);
 
   async function load() {
-    tasks = await Store.getData("todo", []);
+    tasks = await Store.getSynced("todo", []);
     render();
   }
 
   async function persist() {
-    await Store.setData("todo", tasks);
+    await Store.setSetting("todo", tasks);
   }
 
   function render() {

@@ -45,7 +45,18 @@ const Background = (() => {
 
   async function show() {
     const mode = await Store.getSetting("bgMode", "daily");
+
     if (mode === "gradient") { applyGradient(); return; }
+
+    if (mode === "custom") {
+      const url = (await Store.getSetting("bgCustomUrl", "")).trim();
+      if (!url) { applyGradient(); return; }
+      const img = new Image();
+      img.onload = () => apply(url);
+      img.onerror = () => applyGradient();
+      img.src = url;
+      return;
+    }
 
     let pick;
     if (mode === "random") {

@@ -15,13 +15,13 @@ const Links = (() => {
   ];
 
   async function load() {
-    links = await Store.getData("links", null);
+    links = await Store.getSynced("links", null);
     if (links === null) { links = DEFAULTS.slice(); await persist(); }
     render();
   }
 
   async function persist() {
-    await Store.setData("links", links);
+    await Store.setSetting("links", links);
   }
 
   function hostOf(url) {
@@ -78,14 +78,16 @@ const Links = (() => {
     });
   }
 
-  async function add() {
-    const url = prompt("Shortcut URL (e.g. https://news.ycombinator.com):");
+  async function add(url, name) {
+    url = (url || "").trim();
     if (!url) return;
-    let full = url.trim();
+    let full = url;
     if (!/^https?:\/\//i.test(full)) full = "https://" + full;
-    let name = "";
-    try { name = prompt("Display name:", new URL(full).hostname.replace("www.", "")) || ""; } catch (e) { }
-    links.push({ name, url: full });
+    let display = (name || "").trim();
+    if (!display) {
+      try { display = new URL(full).hostname.replace("www.", ""); } catch (e) { display = full; }
+    }
+    links.push({ name: display, url: full });
     if (links.length > 12) links = links.slice(-12);
     await persist();
     render();
@@ -97,5 +99,22 @@ const Links = (() => {
     render();
   }
 
-  return { init: async () => { await load(); $("links-add").addEventListener("click", add); } };
+  function bind() {
+    const form = $("links-form");
+    $("links-add").addEventListener("click", () => {
+      form.hidden = !form.hidden;
+      if (!form.hidden) $("links-url-input").focus();
+    });
+    const commit = async () => {
+      await add($("links-url-input").value, $("links-name-input").value);
+      $("links-url-input").value = "";
+      $("links-name-input").value = "";
+      form.hidden = true;
+    };
+    $("links-save").addEventListener("click", commit);
+    ["links-url-input", "links-name-input"].forEach((id) =>
+      $(id).addEventListener("keydown", (e) => { if (e.key === "Enter") commit(); }));
+  }
+
+  return { init: async () => { await load(); bind(); } };
 })();

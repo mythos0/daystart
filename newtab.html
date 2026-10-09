@@ -40,6 +40,7 @@
       <div id="clock" class="clock">--:--</div>
       <div id="date" class="date">&nbsp;</div>
     </div>
+    <div id="countdown-chip" class="countdown-chip" style="display:none"></div>
     <h1 id="greeting" class="greeting">Hello.</h1>
     <div id="focus-wrap" class="focus-wrap">
       <div id="focus-prompt" class="focus-prompt">What is your main focus for today?</div>
@@ -63,13 +64,6 @@
   </div>
 
   <!-- ============ Bottom-left: quick links ============ -->
-  <aside class="links" id="links-panel">
-    <div class="links-head">
-      <span class="widget-title">Shortcuts</span>
-      <button id="links-add" class="mini-btn" title="Add shortcut">+</button>
-    </div>
-    <div id="links-grid" class="links-grid"></div>
-  </aside>
 
   <!-- ============ Bottom-right: quote ============ -->
   <aside class="quote-box" id="quote-box">
@@ -77,34 +71,52 @@
     <div id="quote-author" class="quote-author">&mdash; Mark Twain</div>
   </aside>
 
-  <!-- ============ Top-left: todo ============ -->
-  <aside class="todo" id="todo-panel">
-    <div class="panel-head">
-      <span class="widget-title">Today</span>
-      <span id="todo-count" class="todo-count">0</span>
-      <button id="todo-clear-done" class="mini-btn" title="Clear completed">&#10003;</button>
-    </div>
-    <div id="todo-list" class="todo-list" role="list"></div>
-    <div class="todo-input-row">
-      <input id="todo-input" type="text" placeholder="Add a task&hellip;" maxlength="200" autocomplete="off">
-      <button id="todo-add" class="mini-btn" title="Add task">+</button>
-    </div>
-  </aside>
+  <!-- ============ Left column: todo / habits / shortcuts ============ -->
+  <div class="left-column" id="left-column">
+    <aside class="todo" id="todo-panel">
+      <div class="panel-head">
+        <span class="widget-title">Today</span>
+        <span id="todo-count" class="todo-count">0</span>
+        <button id="todo-clear-done" class="mini-btn" title="Clear completed">&#10003;</button>
+      </div>
+      <div id="todo-list" class="todo-list" role="list"></div>
+      <div class="todo-input-row">
+        <input id="todo-input" type="text" placeholder="Add a task&hellip;" maxlength="200" autocomplete="off">
+        <button id="todo-add" class="mini-btn" title="Add task">+</button>
+      </div>
+    </aside>
 
-  <!-- ============ Top-left under todo: habits ============ -->
-  <aside class="habits" id="habits-panel">
-    <div class="panel-head">
-      <span class="widget-title">Habits</span>
-      <button id="habits-add" class="mini-btn" title="Add habit">+</button>
-    </div>
-    <div id="habits-list" class="habits-list"></div>
-  </aside>
+    <aside class="habits" id="habits-panel">
+      <div class="panel-head">
+        <span class="widget-title">Habits</span>
+      </div>
+      <div id="habits-list" class="habits-list"></div>
+      <div class="todo-input-row">
+        <input id="habits-input" type="text" placeholder="New habit&hellip;" maxlength="60" autocomplete="off">
+        <button id="habits-add" class="mini-btn" title="Add habit">+</button>
+      </div>
+    </aside>
+
+    <aside class="links" id="links-panel">
+      <div class="links-head">
+        <span class="widget-title">Shortcuts</span>
+        <button id="links-add" class="mini-btn" title="Add shortcut">+</button>
+      </div>
+      <div id="links-grid" class="links-grid"></div>
+      <div class="links-input-row" id="links-form" hidden>
+        <input id="links-url-input" type="text" placeholder="https://&hellip;" maxlength="300" autocomplete="off">
+        <input id="links-name-input" type="text" placeholder="Name" maxlength="30" autocomplete="off">
+        <button id="links-save" class="mini-btn" title="Save shortcut">&#10003;</button>
+      </div>
+    </aside>
+  </div>
 
   <!-- ============ Floating dock ============ -->
   <nav class="dock" id="dock" aria-label="Tools">
     <button class="dock-btn" id="btn-pomodoro" title="Pomodoro timer (P)" aria-label="Pomodoro timer">&#9201;</button>
     <button class="dock-btn" id="btn-notes" title="Notes (N)" aria-label="Notes">&#128221;</button>
     <button class="dock-btn" id="btn-sounds" title="Soundscapes (S)" aria-label="Soundscapes">&#127911;</button>
+    <button class="dock-btn" id="btn-countdowns" title="Countdowns (C)" aria-label="Countdowns">&#127881;</button>
     <button class="dock-btn" id="btn-zen" title="Zen mode (Z)" aria-label="Zen mode">&#129496;</button>
   </nav>
 
@@ -166,6 +178,20 @@
     </div>
   </section>
 
+  <!-- Countdowns -->
+  <section class="side-panel" id="panel-countdowns" aria-hidden="true">
+    <div class="panel-top">
+      <span class="panel-title">Countdowns</span>
+      <button class="panel-close" data-close="panel-countdowns" aria-label="Close">&#10005;</button>
+    </div>
+    <div id="countdowns-list" class="countdowns-list"></div>
+    <div class="countdown-input-row">
+      <input type="text" id="countdown-name-input" placeholder="Event name&hellip;" maxlength="60" autocomplete="off">
+      <input type="date" id="countdown-date-input" aria-label="Event date">
+      <button id="countdown-add" class="mini-btn" title="Add event">+</button>
+    </div>
+  </section>
+
   <!-- Settings -->
   <section class="side-panel" id="panel-settings" aria-hidden="true">
     <div class="panel-top">
@@ -181,6 +207,12 @@
         <select id="set-clock">
           <option value="24">24-hour</option>
           <option value="12">12-hour</option>
+        </select></label>
+      <label class="field"><span>Theme</span>
+        <select id="set-theme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="auto">Auto (dark at night)</option>
         </select></label>
       <label class="field"><span>Show seconds</span>
         <input type="checkbox" id="set-seconds"></label>
@@ -203,8 +235,11 @@
         <select id="set-bg-mode">
           <option value="daily">New photo every day</option>
           <option value="random">Random photo</option>
+          <option value="custom">Custom image URL</option>
           <option value="gradient">Gradient (offline)</option>
         </select></label>
+      <label class="field"><span>Custom image URL</span>
+        <input type="text" id="set-bg-url" maxlength="500" placeholder="https://example.com/photo.jpg"></label>
       <div class="swatches" id="bg-swatches"></div>
     </div>
 
@@ -260,6 +295,7 @@
   <script src="js/pomodoro.js"></script>
   <script src="js/notes.js"></script>
   <script src="js/sounds.js"></script>
+  <script src="js/countdowns.js"></script>
   <script src="js/panels.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/app.js"></script>

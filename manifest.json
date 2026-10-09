@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "DayStart — New Tab Focus Dashboard",
   "short_name": "DayStart",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Transform every new tab into a calm, focused dashboard: greeting, daily focus, tasks, weather, quick links, habits, pomodoro, notes and soundscapes.",
   "author": "DayStart Contributors",
   "homepage_url": "https://github.com/daystart/daystart",
@@ -14,6 +14,18 @@
   },
   "chrome_url_overrides": {
     "newtab": "newtab.html"
+  },
+  "action": {
+    "default_title": "Open DayStart dashboard",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "js/service-worker.js"
   },
   "permissions": [
     "storage",
