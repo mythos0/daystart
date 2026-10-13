@@ -43,11 +43,43 @@ const Quote = (() => {
     return QUOTES[dayOfYear % QUOTES.length];
   }
 
+  function renderPair(pair) {
+    const box = document.getElementById("quote-box");
+    const [text, author] = pair;
+    const t = document.getElementById("quote-text");
+    const a = document.getElementById("quote-author");
+    // small fade for shuffle feedback
+    box.style.opacity = "0";
+    setTimeout(() => {
+      t.textContent = "\u201C" + text + "\u201D";
+      a.textContent = "\u2014 " + author;
+      box.style.opacity = "1";
+    }, 160);
+  }
+
   function render() {
     const [text, author] = pickOfDay();
     document.getElementById("quote-text").textContent = "\u201C" + text + "\u201D";
     document.getElementById("quote-author").textContent = "\u2014 " + author;
   }
 
-  return { init: render };
+  function shuffle() {
+    const cur = pickOfDay();
+    let next = cur;
+    let guard = 0;
+    while (next[0] === cur[0] && guard++ < 10) {
+      next = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    }
+    renderPair(next);
+  }
+
+  function init() {
+    render();
+    const box = document.getElementById("quote-box");
+    box.classList.add("clickable");
+    box.title = "Click for another quote";
+    box.addEventListener("click", shuffle);
+  }
+
+  return { init };
 })();

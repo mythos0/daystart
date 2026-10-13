@@ -14,7 +14,7 @@ const Countdowns = (() => {
   }
 
   async function persist() {
-    await Store.setSetting("countdowns", events);
+    await Store.setSyncedSafe("countdowns", events);
   }
 
   function daysUntil(dateStr) {

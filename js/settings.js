@@ -20,8 +20,9 @@ const Settings = (() => {
     $("set-theme").value = await Store.getSetting("themeMode", "light");
     $("set-units").value = await Store.getSetting("units", "c");
     $("set-city").value = await Store.getSetting("city", "");
-    $("set-bg-mode").value = await Store.getSetting("bgMode", "daily");
+    $("set-bg-mode").value = await Store.getSetting("bgMode", "bing");
     $("set-bg-url").value = await Store.getSetting("bgCustomUrl", "");
+    $("set-bg-playlist").value = await Store.getSetting("bgPlaylist", "");
 
     const widgets = await Store.getSetting("widgets", {});
     const defaults = ["todo", "habits", "weather", "links", "quote", "focus", "search"];
@@ -96,6 +97,10 @@ const Settings = (() => {
     $("set-bg-url").addEventListener("change", async (e) => {
       await Store.setSetting("bgCustomUrl", e.target.value.trim());
       if ($("set-bg-mode").value === "custom") Background.refresh();
+    });
+    $("set-bg-playlist").addEventListener("change", async (e) => {
+      await Store.setSetting("bgPlaylist", e.target.value);
+      if ($("set-bg-mode").value === "playlist") Background.refresh();
     });
 
     ["todo", "habits", "weather", "links", "quote", "focus", "search"].forEach((w) => {

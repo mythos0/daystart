@@ -1,23 +1,28 @@
 /* DayStart — sounds.js
    Ambient soundscapes synthesized with the Web Audio API.
    No audio files, fully offline: rain, ocean, stream, wind,
-   fireplace and night crickets. */
+   fireplace and night crickets.
+   One cached AudioContext is reused for the whole session —
+   creating a fresh context per play breaks cross-context node
+   connections and leaks handles. Audio keeps playing when the
+   panel closes (ambient), and is stopped explicitly. */
 
 const Sounds = (() => {
   let master = null;
+  let audioCtx = null;
   let current = null;         // id of active sound
   let stopFn = null;
   let volume = 0.6;
   const $ = (id) => document.getElementById(id);
 
   function ctx() {
-    const ac = new (window.AudioContext || window.webkitAudioContext)();
-    if (!master) {
-      master = ac.createGain();
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      master = audioCtx.createGain();
       master.gain.value = volume;
-      master.connect(ac.destination);
+      master.connect(audioCtx.destination);
     }
-    return ac;
+    return audioCtx;
   }
 
   /* --- noise buffer helper --- */
@@ -57,15 +62,13 @@ const Sounds = (() => {
   function rain(ac) {
     const { src, filter } = loopingNoise(ac, "bandpass", 1400, 0.6);
     const lfo = lfoTo(filter.frequency, ac, 0.2, 350, 1400);
-    return () => { lfo.stop(); src.stop(); };
+    return () => { try { lfo.stop(); } catch (e) {} try { src.stop(); } catch (e) {} };
   }
 
   function ocean(ac) {
     const { src, filter } = loopingNoise(ac, "lowpass", 480, 0.8);
     const lfo = lfoTo(filter.frequency, ac, 0.11, 320, 480);
-    const g = ac.createGain(); g.gain.value = 1;
-    filter.connect(g); g.connect(master);
-    return () => { lfo.stop(); src.stop(); };
+    return () => { try { lfo.stop(); } catch (e) {} try { src.stop(); } catch (e) {} };
   }
 
   function stream(ac) {
@@ -75,13 +78,13 @@ const Sounds = (() => {
     bub.frequency.value = 8; bg.gain.value = 900;
     bub.connect(bg).connect(filter.frequency);
     bub.start();
-    return () => { src.stop(); bub.stop(); };
+    return () => { try { src.stop(); } catch (e) {} try { bub.stop(); } catch (e) {} };
   }
 
   function wind(ac) {
     const { src, filter } = loopingNoise(ac, "bandpass", 420, 1.4);
     const lfo = lfoTo(filter.frequency, ac, 0.07, 260, 420);
-    return () => { lfo.stop(); src.stop(); };
+    return () => { try { lfo.stop(); } catch (e) {} try { src.stop(); } catch (e) {} };
   }
 
   function fire(ac) {
@@ -99,7 +102,7 @@ const Sounds = (() => {
         o.start(); o.stop(ac.currentTime + 0.15);
       }
     }, 140);
-    return () => { clearInterval(crackle); src.stop(); };
+    return () => { clearInterval(crackle); try { src.stop(); } catch (e) {} };
   }
 
   function night(ac) {
@@ -120,10 +123,17 @@ const Sounds = (() => {
         o.start(t0); o.stop(t0 + 0.35);
       }
     }, 900);
-    return () => { clearInterval(crickets); src.stop(); };
+    return () => { clearInterval(crickets); try { src.stop(); } catch (e) {} };
   }
 
   const GENERATORS = { rain, ocean, stream, wind, fire, night };
+
+  function updateIndicator() {
+    const btn = document.getElementById("btn-sounds");
+    if (btn) btn.classList.toggle("playing", !!current);
+    const stopBtn = $("sound-stop");
+    if (stopBtn) stopBtn.hidden = !current;
+  }
 
   function play(id) {
     stop();
@@ -133,12 +143,14 @@ const Sounds = (() => {
     current = id;
     document.querySelectorAll(".sound-btn").forEach((b) =>
       b.classList.toggle("playing", b.dataset.sound === id));
+    updateIndicator();
   }
 
   function stop() {
     if (stopFn) { try { stopFn(); } catch (e) { } stopFn = null; }
     current = null;
     document.querySelectorAll(".sound-btn").forEach((b) => b.classList.remove("playing"));
+    updateIndicator();
   }
 
   function toggle(id) {
@@ -156,11 +168,12 @@ const Sounds = (() => {
     $("sound-volume").value = Math.round(volume * 100);
     document.querySelectorAll(".sound-btn").forEach((b) =>
       b.addEventListener("click", () => toggle(b.dataset.sound)));
+    $("sound-stop").addEventListener("click", stop);
     $("sound-volume").addEventListener("input", async (e) => {
       setVolume(parseInt(e.target.value, 10) / 100);
       await Store.setSetting("soundVolume", parseInt(e.target.value, 10));
     });
   }
 
-  return { init, stop };
+  return { init, stop, isPlaying: () => !!current };
 })();

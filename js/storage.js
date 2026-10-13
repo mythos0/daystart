@@ -23,12 +23,17 @@ const Store = (() => {
 
   function set(area, key, value) {
     if (hasChrome) {
-      return new Promise((resolve) => chrome.storage[area].set({ [key]: value }, resolve));
+      return new Promise((resolve) => {
+        chrome.storage[area].set({ [key]: value }, () => {
+          // Resolve false on quota / write errors instead of failing silently
+          resolve(!chrome.runtime.lastError);
+        });
+      });
     }
     try {
       localStorage.setItem("ds_" + area + "_" + key, JSON.stringify(value));
     } catch (e) { /* quota */ }
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 
   function remove(area, key) {
@@ -58,6 +63,16 @@ const Store = (() => {
         return legacy;
       }
       return fallback;
+    },
+    // Safe synced write: when the sync area rejects (e.g. per-item 8 KB quota),
+    // drop the stale sync copy and keep the data in the local area instead.
+    setSyncedSafe: async (key, value) => {
+      const ok = await set("sync", key, value);
+      if (!ok) {
+        await remove("sync", key);
+        await set("local", key, value);
+      }
+      return ok;
     },
     // Export everything
     exportAll: async () => {

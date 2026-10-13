@@ -1,6 +1,8 @@
 /* DayStart — pomodoro.js
    Focus timer with configurable focus/break lengths, progress ring,
-   desktop notification and a soft chime (Web Audio, no files needed). */
+   desktop notification and a soft chime (Web Audio, no files needed).
+   The running timer is persisted with an absolute end timestamp so it
+   survives tab reloads and new tabs. */
 
 const Pomodoro = (() => {
   let focusMin = 25, breakMin = 5;
@@ -8,13 +10,15 @@ const Pomodoro = (() => {
   let remaining = 0;            // seconds
   let total = 0;                // seconds of current phase
   let running = false;
+  let autoStart = false;
   let ticker = null;
   let sessionsToday = 0;
-  let lastCountDate = null;
   let audioCtx = null;
 
   const $ = (id) => document.getElementById(id);
   const RING_LEN = 2 * Math.PI * 54;
+
+  function todayKey() { return new Date().toISOString().slice(0, 10); }
 
   function ctx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -67,22 +71,41 @@ const Pomodoro = (() => {
     $("pomo-start").textContent = running ? "Pause" : "Start";
   }
 
+  /* Persist an absolute end timestamp so the timer survives reloads. */
+  async function persistState() {
+    await Store.setData("pomoState", {
+      mode, running,
+      remaining,
+      endAt: running ? Date.now() + remaining * 1000 : null
+    });
+  }
+
+  function phaseComplete() {
+    if (mode === "focus") {
+      sessionsToday++;
+      Store.setData("pomoSessions", { date: todayKey(), count: sessionsToday });
+      chime("done");
+      notify("Focus session complete", "Well done. Time for a break.");
+    } else {
+      chime("break");
+      notify("Break finished", "Ready for the next focus session?");
+    }
+    const next = mode === "focus" ? "break" : "focus";
+    setMode(next);
+    if (autoStart) {
+      running = true;
+      persistState();
+    } else {
+      running = false;
+      clearInterval(ticker);
+      persistState();
+    }
+  }
+
   function tick() {
     remaining--;
     if (remaining <= 0) {
-      if (mode === "focus") {
-        sessionsToday++;
-        Store.setData("pomoSessions", { date: new Date().toISOString().slice(0, 10), count: sessionsToday });
-        chime("done");
-        notify("Focus session complete", "Well done. Time for a break.");
-        setMode("break");
-      } else {
-        chime("break");
-        notify("Break finished", "Ready for the next focus session?");
-        setMode("focus");
-      }
-      running = false;
-      clearInterval(ticker);
+      phaseComplete();
     }
     render();
   }
@@ -97,10 +120,12 @@ const Pomodoro = (() => {
     if (running) {
       clearInterval(ticker);
       running = false;
+      persistState();
     } else {
       if (remaining <= 0) setMode(mode);
       running = true;
       ticker = setInterval(tick, 1000);
+      persistState();
       try { ctx().resume(); } catch (e) { }
     }
     render();
@@ -110,29 +135,67 @@ const Pomodoro = (() => {
     clearInterval(ticker);
     running = false;
     setMode(mode);
+    persistState();
     render();
   }
 
   function skip() {
-    if (mode === "focus") { setMode("break"); } else { setMode("focus"); }
     clearInterval(ticker);
     running = false;
+    setMode(mode === "focus" ? "break" : "focus");
+    persistState();
     render();
+  }
+
+  function startTicking() {
+    clearInterval(ticker);
+    ticker = setInterval(tick, 1000);
   }
 
   async function loadStats() {
     const s = await Store.getData("pomoSessions", null);
-    const today = new Date().toISOString().slice(0, 10);
-    sessionsToday = s && s.date === today ? s.count : 0;
+    sessionsToday = s && s.date === todayKey() ? s.count : 0;
+  }
+
+  /* Restore a timer that was running before the tab was closed/reloaded. */
+  async function restoreState() {
+    const st = await Store.getData("pomoState", null);
+    if (!st) return;
+    if (st.mode === "break" || st.mode === "focus") mode = st.mode;
+    total = (mode === "focus" ? focusMin : breakMin) * 60;
+    if (st.running && st.endAt) {
+      const leftMs = st.endAt - Date.now();
+      if (leftMs > 0) {
+        remaining = Math.ceil(leftMs / 1000);
+        running = true;
+        startTicking();
+        return;
+      }
+      // Phase finished while the tab was closed
+      if (mode === "focus") {
+        sessionsToday++;
+        Store.setData("pomoSessions", { date: todayKey(), count: sessionsToday });
+      }
+      setMode(mode === "focus" ? "break" : "focus");
+      running = false;
+      persistState();
+      return;
+    }
+    remaining = typeof st.remaining === "number" && st.remaining > 0
+      ? Math.min(st.remaining, total) : total;
+    running = false;
   }
 
   async function init() {
     focusMin = await Store.getSetting("pomoFocus", 25);
     breakMin = await Store.getSetting("pomoBreak", 5);
+    autoStart = await Store.getSetting("pomoAuto", false);
     $("pomo-focus-min").value = focusMin;
     $("pomo-break-min").value = breakMin;
+    $("pomo-auto").checked = autoStart;
     await loadStats();
-    setMode("focus");
+    await restoreState();
+    if (!running) { if (remaining <= 0) setMode(mode); }
     render();
 
     $("pomo-start").addEventListener("click", startPause);
@@ -150,6 +213,10 @@ const Pomodoro = (() => {
       e.target.value = breakMin;
       await Store.setSetting("pomoBreak", breakMin);
       if (mode === "break" && !running) { setMode("break"); render(); }
+    });
+    $("pomo-auto").addEventListener("change", async (e) => {
+      autoStart = e.target.checked;
+      await Store.setSetting("pomoAuto", autoStart);
     });
   }
 

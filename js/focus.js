@@ -20,7 +20,7 @@ const Focus = (() => {
   }
 
   async function save() {
-    await Store.setSetting("focus", state);
+    await Store.setSyncedSafe("focus", state);
   }
 
   function render() {

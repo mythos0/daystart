@@ -5,6 +5,7 @@ const Panels = (() => {
   let active = null;
   const DOCK_MAP = {
     "panel-pomodoro": "btn-pomodoro",
+    "panel-journal": "btn-journal",
     "panel-notes": "btn-notes",
     "panel-sounds": "btn-sounds",
     "panel-countdowns": "btn-countdowns",
@@ -32,7 +33,8 @@ const Panels = (() => {
     const dockBtn = document.getElementById(DOCK_MAP[active]);
     if (dockBtn) dockBtn.classList.remove("active");
     active = null;
-    Sounds.stop();
+    // NOTE: soundscapes intentionally keep playing after the panel closes —
+    // they are ambient audio. Stop them with the Stop button in the panel.
   }
 
   function isOpen(id) { return active === id; }
@@ -42,6 +44,7 @@ const Panels = (() => {
       btn.addEventListener("click", close));
 
     document.getElementById("btn-pomodoro").addEventListener("click", () => toggle("panel-pomodoro"));
+    document.getElementById("btn-journal").addEventListener("click", () => toggle("panel-journal"));
     document.getElementById("btn-notes").addEventListener("click", () => toggle("panel-notes"));
     document.getElementById("btn-sounds").addEventListener("click", () => toggle("panel-sounds"));
     document.getElementById("btn-countdowns").addEventListener("click", () => toggle("panel-countdowns"));

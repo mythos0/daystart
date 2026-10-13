@@ -29,7 +29,7 @@ const Habits = (() => {
   }
 
   async function persist() {
-    await Store.setSetting("habits", habits);
+    await Store.setSyncedSafe("habits", habits);
   }
 
   function render() {

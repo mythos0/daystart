@@ -2,7 +2,7 @@
 
 A calm, focused dashboard for every new tab in Chrome, Edge, Brave, Vivaldi and other Chromium browsers. DayStart replaces the default new tab page with a clean, personal workspace that combines the time, your daily focus, tasks, weather, shortcuts and focus tools in one thoughtfully designed view.
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue) ![Chrome](https://img.shields.io/badge/browser-Chrome%20MV3-green) ![Tests](https://img.shields.io/badge/tests-23%2F23%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Chrome](https://img.shields.io/badge/browser-Chrome%20MV3-green) ![Tests](https://img.shields.io/badge/tests-38%2F38%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ---
 
@@ -23,26 +23,28 @@ The extension is completely free, requires no account, contains no advertising, 
 
 ### Productivity tools
 
-- **Todo list** — a lightweight task list with add, complete, delete and “clear completed” operations. Task count is summarized at the top of the widget. Tasks sync across devices through your browser profile.
+- **Todo list with power-ups** — add, complete, delete and reorder tasks. Tasks support **priority flags** (a colored edge marks medium and high priority), **due dates** with human labels (Today / Tomorrow / weekday, highlighted red when overdue) and **drag & drop reordering**. A progress bar fills as the list is completed, and quick tokens like `@today` / `@tomorrow` set a due date while typing.
+- **Daily journal** — a private, one-entry-per-day journal with a reflective prompt of the day, a five-step mood check-in and three gratitude lines. Entries autosave, can be browsed day by day with the arrows, and stay on-device.
 - **Habit tracker** — define daily habits with a proper inline input and check them off each day. The widget tracks consecutive-day streaks and resets intelligently when a day is missed.
 - **Event countdowns** — add any event with a name and date. The next upcoming event appears as a subtle chip under the clock (“Kyoto trip — 12 days”), with full management in its own panel.
-- **Pomodoro timer** — configurable focus and break intervals (default 25/5), an animated progress ring, desktop notifications, a synthesized chime, and a daily session counter.
+- **Pomodoro timer** — configurable focus and break intervals (default 25/5), an animated progress ring, desktop notifications, a synthesized chime, a daily session counter and an optional **auto-start** for the next session. A running timer **survives tab reloads** — it is persisted with an absolute end timestamp.
 - **Notes** — a distraction-free notepad with automatic saving.
 
 ### Environment and context
 
-- **Weather widget** — current conditions and a three-day forecast, powered by the free, keyless [Open-Meteo](https://open-meteo.com) API. Location is detected automatically (with your permission) or set manually to any city worldwide. Celsius and Fahrenheit are both supported. Responses are cached for thirty minutes.
-- **Daily landscape photography** — a curated catalog of scenic images rotates once per calendar day. Random rotation, **custom image URL**, and an offline gradient mode are available in settings.
+- **Weather widget** — current conditions plus a three-day forecast with icons and high/low temperatures in a popover, powered by the free, keyless [Open-Meteo](https://open-meteo.com) API. Location is detected automatically (with your permission; coordinates are cached for seven days so the permission prompt is not repeated) or set manually to any city worldwide. Celsius and Fahrenheit are both supported. Responses are cached for thirty minutes.
+- **Daily wallpaper** — by default a high-resolution **curated daily photograph** (the Bing wallpaper archive, cached per day). Alternatives: a rotating nature-photo catalog, random rotation, a **custom image URL**, a **photo playlist** (one URL per line, advancing daily), and an offline gradient mode. Every source degrades gracefully — offline tabs never flash or break.
 - **Quick shortcuts** — a compact grid of up to twelve favorite destinations with automatic favicon lookup; sensible defaults are provided on first launch.
-- **Web search** — a search bar with five selectable engines: Google, DuckDuckGo, Bing, YouTube and GitHub.
-- **Soundscapes** — six ambient soundscapes (rain, ocean, stream, wind, fireplace, night) generated entirely with the Web Audio API. No audio files are downloaded, and playback works offline.
+- **Web search** — a search bar with six selectable engines: Google, DuckDuckGo, Bing, YouTube, GitHub and Wikipedia. `Tab` cycles engines, and one-shot **bangs** switch engine per query: `!gh playwright`, `!y lofi beats`, `!w zen garden` and friends.
+- **Soundscapes** — six ambient soundscapes (rain, ocean, stream, wind, fireplace, night) generated entirely with the Web Audio API. No audio files are downloaded, and playback works offline. Audio **keeps playing after the panel closes** (a pulsing dot on the dock indicates it), with a Stop-all button in the panel.
 
 ### Personalization
 
 - **Zen mode** — hides every widget and leaves only the clock and your focus. Ideal for deep work.
 - **Theme system** — light, dark, or **auto** (switches to dark automatically at night and back at sunrise).
 - **Widget visibility** — every dashboard widget can be shown or hidden independently in settings.
-- **Background modes** — daily photo, random photo, custom image URL, or a hand-tuned gradient (works fully offline, with six quick swatches).
+- **Background modes** — curated daily wallpaper, nature catalog, random, custom URL, photo playlist, or a hand-tuned gradient (works fully offline, with six quick swatches).
+- **Entrance animation & reduced motion** — the dashboard elements rise in with a soft stagger, and every animation is disabled automatically for users who prefer reduced motion.
 
 ### Privacy and data ownership
 
@@ -57,13 +59,18 @@ The extension is completely free, requires no account, contains no advertising, 
 |-----|--------|
 | `T` | Focus the todo input |
 | `F` | Focus the daily-focus input |
-| `S` | Focus the search bar |
-| `N` | Toggle the notes panel |
 | `P` | Toggle the pomodoro panel |
+| `J` | Toggle the daily journal |
+| `N` | Toggle the notes panel |
+| `S` | Toggle the soundscapes panel |
+| `/` | Focus the search bar |
 | `C` | Toggle the countdowns panel |
 | `Z` | Toggle zen mode |
 | `D` | Toggle dark mode |
+| `?` | Keyboard shortcut cheat-sheet |
 | `Esc` | Close the active panel |
+
+Inside the search bar: `Tab` cycles the engine; `!gh`, `!y`, `!w`, `!d`, `!b`, `!g` prefix one-shot engine switches.
 
 ## Installation
 
@@ -101,11 +108,15 @@ The resulting `.zip` can be uploaded to the Chrome Web Store or loaded locally.
 
 Weather data is provided by [Open-Meteo](https://open-meteo.com) under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/). The extension requires no API key, and requests are made directly from the browser to Open-Meteo's public endpoints.
 
-Background photography is served from [Picsum Photos](https://picsum.photos).
+Background photography is served from the Bing wallpaper archive (daily mode) and [Picsum Photos](https://picsum.photos) (nature modes).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 ## Testing
 
-The repository ships an automated end-to-end suite (`tests/test_extension.py`, Playwright) that loads the real extension into headless Chromium and verifies the service worker, onboarding, every widget, themes, shortcuts, storage migration and error-free execution — 23 checks in total. See [tests/README.md](tests/README.md).
+The repository ships an automated end-to-end suite (`tests/test_extension.py`, Playwright) that loads the real extension into headless Chromium and verifies the service worker, onboarding, every widget, the journal, todo power-ups (priority, due dates, drag & drop), timer persistence, audio behavior, storage quota fallback, migration and error-free execution — 38 checks in total. See [tests/README.md](tests/README.md).
 
 ```bash
 python3 tests/test_extension.py
@@ -125,15 +136,16 @@ daystart/
 │   ├── app.js             # Bootstrap, shortcuts, themes, zen mode
 │   ├── clock.js           # Clock, date, greeting
 │   ├── focus.js           # Daily focus
-│   ├── todo.js            # Todo list
+│   ├── todo.js            # Todo list with priority, due dates, drag & drop
 │   ├── habits.js          # Habit tracker with streaks
 │   ├── countdowns.js      # Event countdowns
 │   ├── links.js           # Quick shortcuts
 │   ├── quote.js           # Quote of the day
 │   ├── weather.js         # Open-Meteo weather widget
-│   ├── background.js      # Daily photography & gradients
-│   ├── search.js          # Multi-engine search
-│   ├── pomodoro.js        # Pomodoro timer
+│   ├── background.js      # Curated daily wallpaper & fallbacks
+│   ├── search.js          # Multi-engine search with bangs
+│   ├── pomodoro.js        # Pomodoro timer (state persisted across reloads)
+│   ├── journal.js         # Daily journal: prompt, mood, gratitude
 │   ├── notes.js           # Notepad
 │   ├── sounds.js          # Web Audio soundscapes
 │   ├── panels.js          # Side-panel manager

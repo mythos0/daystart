@@ -21,7 +21,7 @@ const Links = (() => {
   }
 
   async function persist() {
-    await Store.setSetting("links", links);
+    await Store.setSyncedSafe("links", links);
   }
 
   function hostOf(url) {

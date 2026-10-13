@@ -20,16 +20,20 @@
       </div>
     </div>
     <div class="topbar-right">
-      <!-- Weather widget -->
-      <div id="weather" class="weather" tabindex="0" role="button" aria-label="Weather details">
-        <span id="weather-icon" class="weather-icon">&#9728;</span>
-        <span id="weather-temp" class="weather-temp">--&deg;</span>
-        <div id="weather-detail" class="weather-detail">
-          <div id="weather-desc" class="weather-desc">Locating&hellip;</div>
+      <!-- Weather widget: pill + popover -->
+      <div class="weather-wrap">
+        <div id="weather" class="weather" tabindex="0" role="button" aria-label="Weather details" aria-expanded="false">
+          <span id="weather-icon" class="weather-icon">&#9728;</span>
+          <span id="weather-temp" class="weather-temp">--&deg;</span>
+        </div>
+        <div id="weather-detail" class="weather-detail" role="dialog" aria-label="Weather forecast">
+          <div class="weather-city" id="weather-city">Locating&hellip;</div>
+          <div class="weather-desc" id="weather-desc">&mdash;</div>
           <div id="weather-forecast" class="weather-forecast"></div>
         </div>
       </div>
       <button id="btn-dark" class="icon-btn" title="Toggle dark mode (D)" aria-label="Toggle dark mode">&#9789;</button>
+      <button id="btn-help" class="icon-btn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
       <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Open settings">&#9881;</button>
     </div>
   </header>
@@ -79,9 +83,12 @@
         <span id="todo-count" class="todo-count">0</span>
         <button id="todo-clear-done" class="mini-btn" title="Clear completed">&#10003;</button>
       </div>
+      <div class="todo-progress" id="todo-progress" style="display:none">
+        <div class="todo-progress-fill" id="todo-progress-fill"></div>
+      </div>
       <div id="todo-list" class="todo-list" role="list"></div>
       <div class="todo-input-row">
-        <input id="todo-input" type="text" placeholder="Add a task&hellip;" maxlength="200" autocomplete="off">
+        <input id="todo-input" type="text" placeholder="Add a task&hellip;  (@today / @tomorrow)" maxlength="200" autocomplete="off">
         <button id="todo-add" class="mini-btn" title="Add task">+</button>
       </div>
     </aside>
@@ -114,6 +121,7 @@
   <!-- ============ Floating dock ============ -->
   <nav class="dock" id="dock" aria-label="Tools">
     <button class="dock-btn" id="btn-pomodoro" title="Pomodoro timer (P)" aria-label="Pomodoro timer">&#9201;</button>
+    <button class="dock-btn" id="btn-journal" title="Daily journal (J)" aria-label="Daily journal">&#128214;</button>
     <button class="dock-btn" id="btn-notes" title="Notes (N)" aria-label="Notes">&#128221;</button>
     <button class="dock-btn" id="btn-sounds" title="Soundscapes (S)" aria-label="Soundscapes">&#127911;</button>
     <button class="dock-btn" id="btn-countdowns" title="Countdowns (C)" aria-label="Countdowns">&#127881;</button>
@@ -146,6 +154,36 @@
       <label>Focus <input type="number" id="pomo-focus-min" min="5" max="90" step="5" value="25"> min</label>
       <label>Break <input type="number" id="pomo-break-min" min="1" max="30" step="1" value="5"> min</label>
     </div>
+    <label class="check pomo-auto"><input type="checkbox" id="pomo-auto"> Auto-start next session</label>
+  </section>
+
+  <!-- Journal -->
+  <section class="side-panel" id="panel-journal" aria-hidden="true">
+    <div class="panel-top">
+      <span class="panel-title">Journal</span>
+      <button class="panel-close" data-close="panel-journal" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="journal-nav">
+      <button id="journal-prev" class="mini-btn" title="Previous day">&lsaquo;</button>
+      <span id="journal-date" class="journal-date">Today</span>
+      <button id="journal-next" class="mini-btn" title="Next day">&rsaquo;</button>
+    </div>
+    <div class="journal-prompt" id="journal-prompt">&mdash;</div>
+    <div class="mood-row" role="group" aria-label="Mood">
+      <button class="mood-btn" data-mood="1" title="Rough">&#128542;</button>
+      <button class="mood-btn" data-mood="2" title="Meh">&#128528;</button>
+      <button class="mood-btn" data-mood="3" title="Okay">&#128578;</button>
+      <button class="mood-btn" data-mood="4" title="Good">&#128512;</button>
+      <button class="mood-btn" data-mood="5" title="Amazing">&#129321;</button>
+    </div>
+    <textarea id="journal-text" class="journal-text" placeholder="Write about your day&hellip;"></textarea>
+    <div class="gratitude">
+      <span class="gratitude-label">Three gratitudes</span>
+      <input type="text" id="journal-g1" maxlength="120" placeholder="1. I am grateful for&hellip;" autocomplete="off">
+      <input type="text" id="journal-g2" maxlength="120" placeholder="2. I am grateful for&hellip;" autocomplete="off">
+      <input type="text" id="journal-g3" maxlength="120" placeholder="3. I am grateful for&hellip;" autocomplete="off">
+    </div>
+    <div class="notes-foot"><span id="journal-saved">Saved</span><span id="journal-history" class="journal-history"></span></div>
   </section>
 
   <!-- Notes -->
@@ -172,6 +210,7 @@
       <button class="sound-btn" data-sound="fire">&#128293; Fireplace</button>
       <button class="sound-btn" data-sound="night">&#127769; Night</button>
     </div>
+    <button id="sound-stop" class="btn sound-stop" hidden>&#9632; Stop all sound</button>
     <div class="sound-volume">
       <label for="sound-volume">Volume</label>
       <input type="range" id="sound-volume" min="0" max="100" value="60">
@@ -233,13 +272,17 @@
       <h3>Background</h3>
       <label class="field"><span>Mode</span>
         <select id="set-bg-mode">
-          <option value="daily">New photo every day</option>
+          <option value="bing">Daily wallpaper (curated)</option>
+          <option value="daily">Nature photos, new every day</option>
           <option value="random">Random photo</option>
           <option value="custom">Custom image URL</option>
+          <option value="playlist">Photo playlist (one per day)</option>
           <option value="gradient">Gradient (offline)</option>
         </select></label>
       <label class="field"><span>Custom image URL</span>
         <input type="text" id="set-bg-url" maxlength="500" placeholder="https://example.com/photo.jpg"></label>
+      <label class="field"><span>Playlist — one image URL per line</span>
+        <textarea id="set-bg-playlist" rows="4" maxlength="4000" placeholder="https://example.com/a.jpg&#10;https://example.com/b.jpg"></textarea></label>
       <div class="swatches" id="bg-swatches"></div>
     </div>
 
@@ -252,6 +295,11 @@
         </select></label>
       <label class="field"><span>City (leave blank to auto-detect)</span>
         <input type="text" id="set-city" maxlength="60" placeholder="e.g. Dhaka"></label>
+    </div>
+
+    <div class="settings-group">
+      <h3>Keyboard</h3>
+      <div class="kbd-hint">Press <kbd>?</kbd> anytime for the shortcut cheat-sheet</div>
     </div>
 
     <div class="settings-group">
@@ -268,6 +316,31 @@
       <span id="storage-note"></span>
     </div>
   </section>
+
+  <!-- Keyboard shortcut help -->
+  <div id="help-modal" class="help-modal" hidden>
+    <div class="help-card">
+      <div class="panel-top">
+        <span class="panel-title">Keyboard shortcuts</span>
+        <button class="panel-close" id="help-close" aria-label="Close">&#10005;</button>
+      </div>
+      <div class="help-grid">
+        <div class="help-row"><kbd>F</kbd><span>Set main focus</span></div>
+        <div class="help-row"><kbd>T</kbd><span>Add a task</span></div>
+        <div class="help-row"><kbd>P</kbd><span>Pomodoro timer</span></div>
+        <div class="help-row"><kbd>J</kbd><span>Daily journal</span></div>
+        <div class="help-row"><kbd>N</kbd><span>Notes</span></div>
+        <div class="help-row"><kbd>S</kbd><span>Soundscapes</span></div>
+        <div class="help-row"><kbd>/</kbd><span>Search the web</span></div>
+        <div class="help-row"><kbd>C</kbd><span>Countdowns</span></div>
+        <div class="help-row"><kbd>Z</kbd><span>Zen mode</span></div>
+        <div class="help-row"><kbd>D</kbd><span>Dark mode</span></div>
+        <div class="help-row"><kbd>Esc</kbd><span>Close panels</span></div>
+        <div class="help-row"><kbd>Tab</kbd><span>(in search) cycle engine</span></div>
+        <div class="help-row"><kbd>!gh</kbd><span>(in search) bang, e.g. !gh / !y / !w</span></div>
+      </div>
+    </div>
+  </div>
 
   <!-- Onboarding -->
   <div id="onboarding" class="onboarding" hidden>
@@ -296,6 +369,7 @@
   <script src="js/notes.js"></script>
   <script src="js/sounds.js"></script>
   <script src="js/countdowns.js"></script>
+  <script src="js/journal.js"></script>
   <script src="js/panels.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/app.js"></script>

@@ -3,6 +3,37 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2.0] - 2026-10-14
+
+### Added
+- **Daily journal** (`J`): one entry per day with a reflective prompt of the day, a five-step mood check-in, three gratitude lines, day-by-day navigation and autosave. Entries stay on-device and are included in data export.
+- **Todo power-ups**: priority flags (medium / high, drawn as a colored edge), due dates with human labels (Today / Tomorrow / weekday) and red overdue highlighting, drag & drop reordering, a completion progress bar, and quick `@today` / `@tomorrow` tokens while typing a task.
+- **Curated daily wallpaper** (new default background): high-resolution Bing wallpaper archive photo, cached per day, with graceful fallback to the nature catalog and then to gradients.
+- **Photo playlist background mode**: paste one image URL per line; a different photo is chosen each day.
+- **Search bangs**: `!gh`, `!y`, `!w`, `!d`, `!b`, `!g` switch engine for a single search; Wikipedia added as a sixth engine; `Tab` cycles engines.
+- **Keyboard cheat-sheet**: press `?` for a modal listing all shortcuts (also available from the new top-bar help button).
+- **Pomodoro auto-start** option for the next session, and the running timer now survives tab reloads (persisted with an absolute end timestamp).
+- **Quote shuffle**: clicking the quote shows another one with a soft fade.
+- Weather popover with condition, high/low three-day forecast and location name; coordinates cached for 7 days so the geolocation prompt is not repeated on every new tab.
+- Soundscapes keep playing after the panel closes, with a pulsing indicator on the dock and a Stop-all button in the panel.
+- Entrance animation for the dashboard, disabled automatically under `prefers-reduced-motion`.
+- 15 new automated end-to-end tests (38 total).
+
+### Fixed
+- Soundscapes crashed with an AudioContext cross-context error the second time a sound was played; a single context is now cached for the session.
+- Closing any side panel (notes, pomodoro, …) stopped the soundscapes; ambient audio is now independent of panel state.
+- The weather detail popover could never open (its toggle was never wired); it is now a proper dropdown card.
+- The pomodoro timer reset whenever the tab was reloaded; state is persisted and restored.
+- `chrome.storage.sync` writes that exceed the per-item quota failed silently; writes now detect the failure and fall back to the local storage area.
+- Zen mode did not hide the search bar (entrance animation overrode the hidden state) nor the countdown chip.
+- `S` shortcut focused the web search although the dock labeled it “Soundscapes”; `S` now toggles soundscapes and `/` focuses search.
+- Stale comment referenced an unimplemented “lucky search” behavior.
+- Incorrect `homepage_url` in the manifest.
+
+### Changed
+- Storage layer resolves write failures instead of failing silently (`setSyncedSafe` with local fallback).
+- Weather forecast now shows icon plus high/low temperatures per day.
+
 ## [1.1.0] - 2026-10-09
 
 ### Added
@@ -41,4 +72,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Keyboard shortcuts for all major actions.
 - First-run onboarding.
 
-[1.0.0]: https://github.com/daystart/daystart/releases/tag/v1.0.0
+[1.2.0]: https://github.com/mythos0/daystart/releases/tag/v1.2.0
+[1.1.0]: https://github.com/mythos0/daystart/releases/tag/v1.1.0
+[1.0.0]: https://github.com/mythos0/daystart/releases/tag/v1.0.0

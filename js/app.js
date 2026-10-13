@@ -109,20 +109,34 @@ const App = (() => {
       switch (e.key.toLowerCase()) {
         case "t": e.preventDefault(); $("todo-input").focus(); break;
         case "f": e.preventDefault(); $("focus-input").focus(); break;
-        case "s": e.preventDefault(); if (!Panels.isOpen("panel-sounds")) Search.focus(); break;
+        case "s": e.preventDefault(); Panels.toggle("panel-sounds"); break;
+        case "/": e.preventDefault(); if (!Panels.isOpen("panel-sounds")) Search.focus(); break;
         case "n": e.preventDefault(); Panels.toggle("panel-notes"); break;
+        case "j": e.preventDefault(); Panels.toggle("panel-journal"); break;
         case "p": e.preventDefault(); Panels.toggle("panel-pomodoro"); break;
         case "c": e.preventDefault(); Panels.toggle("panel-countdowns"); break;
         case "z": e.preventDefault(); toggleZen(); break;
         case "d": e.preventDefault(); toggleDark(); break;
-        case "escape": Panels.close(); break;
+        case "?": e.preventDefault(); toggleHelp(); break;
+        case "escape":
+          if (!$("help-modal").hidden) { $("help-modal").hidden = true; break; }
+          Panels.close(); break;
       }
     });
+  }
+
+  function toggleHelp() {
+    $("help-modal").hidden = !$("help-modal").hidden;
   }
 
   function bindMisc() {
     $("btn-dark").addEventListener("click", toggleDark);
     $("btn-zen").addEventListener("click", toggleZen);
+    $("btn-help").addEventListener("click", toggleHelp);
+    $("help-modal").addEventListener("click", (e) => {
+      if (e.target === $("help-modal")) $("help-modal").hidden = true;
+    });
+    $("help-close").addEventListener("click", () => { $("help-modal").hidden = true; });
   }
 
   async function init() {
@@ -142,6 +156,7 @@ const App = (() => {
       Background.init(),
       Search.init(),
       Pomodoro.init(),
+      Journal.init(),
       Notes.init(),
       Sounds.init(),
       Countdowns.init(),
@@ -159,5 +174,5 @@ const App = (() => {
 
   document.addEventListener("DOMContentLoaded", init);
 
-  return { toast, applyWidgetVisibility, applyTheme };
+  return { toast, applyWidgetVisibility, applyTheme, toggleHelp };
 })();

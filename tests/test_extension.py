@@ -19,6 +19,7 @@ Usage:
 Exit code 0 = all tests passed, 1 = at least one failure.
 """
 
+import base64
 import json
 import os
 import re
@@ -384,6 +385,248 @@ def browser_tests():
             page.wait_for_timeout(1000)
         check("search submits to the selected engine", search_submit_navigates)
 
+        # ------------------- v1.2.0 feature tests -------------------
+
+        def todo_quick_parse():
+            page.fill("#todo-input", "Submit report @today")
+            page.press("#todo-input", "Enter")
+            page.wait_for_timeout(300)
+            first = page.locator(".todo-item").first
+            expect("Submit report" in first.locator(".todo-text").inner_text(),
+                   "quick token not stripped from text")
+            expect("Today" in first.locator(".due-chip").inner_text(),
+                   "due chip missing after @today")
+        check("todo: @today token sets a due chip", todo_quick_parse)
+
+        def todo_priority_cycle():
+            flag = page.locator(".todo-item").first.locator(".todo-flag")
+            row = page.locator(".todo-item").first
+            flag.click()
+            page.wait_for_timeout(200)
+            expect("p1" in row.get_attribute("class"), "priority 1 class missing")
+            flag.click()
+            page.wait_for_timeout(200)
+            expect("p2" in row.get_attribute("class"), "priority 2 class missing")
+            flag.click()
+            page.wait_for_timeout(200)
+            expect("p1" not in row.get_attribute("class") and "p2" not in row.get_attribute("class"),
+                   "priority did not cycle back to none")
+        check("todo: priority flag cycles none→med→high", todo_priority_cycle)
+
+        def todo_date_picker():
+            row = page.locator(".todo-item").first
+            row.locator(".todo-date-btn").click()
+            page.wait_for_timeout(200)
+            picker = page.locator(".todo-date-row input")
+            expect(picker.count() == 1, "inline date picker did not open")
+            # fill() fires input+change → handler persists and re-renders
+            picker.fill("2020-01-01")
+            page.wait_for_timeout(300)
+            chip = page.locator(".todo-item").first.locator(".due-chip")
+            expect("overdue" in chip.get_attribute("class"), "past due date not flagged overdue")
+            chip.click()  # clears the due date
+            page.wait_for_timeout(300)
+            expect(page.locator(".todo-item").first.locator(".due-chip").count() == 0,
+                   "due chip did not clear")
+        check("todo: inline date picker sets + clears overdue state", todo_date_picker)
+
+        def todo_dnd_reorder():
+            page.fill("#todo-input", "Drag Alpha")
+            page.press("#todo-input", "Enter")
+            page.fill("#todo-input", "Drag Beta")
+            page.press("#todo-input", "Enter")
+            page.wait_for_timeout(400)
+            first_text = page.locator(".todo-item").first.locator(".todo-text").inner_text()
+            expect(first_text == "Drag Beta", f"expected Beta first, got {first_text}")
+            # synthetic HTML5 drag: Beta (row 0) dropped onto Alpha (row 1)
+            page.evaluate("""() => {
+                const rows = document.querySelectorAll('.todo-item');
+                const dt = new DataTransfer();
+                rows[0].dispatchEvent(new DragEvent('dragstart', {dataTransfer: dt, bubbles: true}));
+                rows[1].dispatchEvent(new DragEvent('dragover', {dataTransfer: dt, bubbles: true}));
+                rows[1].dispatchEvent(new DragEvent('drop', {dataTransfer: dt, bubbles: true}));
+                rows[0].dispatchEvent(new DragEvent('dragend', {dataTransfer: dt, bubbles: true}));
+            }""")
+            page.wait_for_timeout(400)
+            first_text = page.locator(".todo-item").first.locator(".todo-text").inner_text()
+            expect(first_text == "Drag Alpha", f"drag reorder failed, first={first_text}")
+        check("todo: drag & drop reorders tasks", todo_dnd_reorder)
+
+        def todo_progress_bar():
+            items = page.locator(".todo-item").count()
+            expect(items >= 2, "need tasks for progress test")
+            page.locator(".todo-item").first.locator(".todo-check").click()
+            page.wait_for_timeout(300)
+            width = page.locator("#todo-progress-fill").evaluate("el => el.style.width")
+            expect(width and width != "0%" and width != "", f"progress bar not moving: {width!r}")
+        check("todo: progress bar reflects completion", todo_progress_bar)
+
+        def journal_flow():
+            page.keyboard.press("j")
+            page.wait_for_timeout(400)
+            expect("open" in page.locator("#panel-journal").get_attribute("class"),
+                   "journal panel did not open via J")
+            prompt1 = page.locator("#journal-prompt").inner_text()
+            expect(len(prompt1) > 10, "journal prompt missing")
+            page.fill("#journal-text", "Deep work all morning, felt great.")
+            page.locator(".mood-btn[data-mood='4']").click()
+            page.fill("#journal-g1", "morning run")
+            page.wait_for_timeout(1200)  # debounce
+            stored = page.evaluate("new Promise(r => chrome.storage.local.get('journal', r))")
+            entry = stored.get("journal", {}).get(str(date.today()))
+            expect(entry and entry["text"] == "Deep work all morning, felt great.",
+                   f"journal entry not persisted: {entry}")
+            expect(entry["mood"] == 4, "mood not saved")
+            expect("morning run" in entry["gratitude"][0], "gratitude not saved")
+            # persists across reload
+            page.reload()
+            page.wait_for_timeout(1500)
+            page.keyboard.press("j")
+            page.wait_for_timeout(400)
+            expect(page.locator("#journal-text").input_value() == "Deep work all morning, felt great.",
+                   "journal did not reload")
+            # navigate to yesterday
+            page.click("#journal-prev")
+            page.wait_for_timeout(300)
+            expect("Yesterday" in page.locator("#journal-date").inner_text(),
+                   "prev-day navigation failed")
+            expect(page.locator("#journal-text").input_value() == "",
+                   "yesterday should start empty")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+        check("journal: prompt, mood, gratitude, autosave, reload, day nav", journal_flow)
+
+        def sounds_survive_panel_close():
+            page.click("#btn-sounds")
+            page.wait_for_timeout(400)
+            page.locator(".sound-btn[data-sound='rain']").click()
+            page.wait_for_timeout(400)
+            expect("playing" in page.locator(".sound-btn[data-sound='rain']").get_attribute("class"),
+                   "rain did not start")
+            page.keyboard.press("Escape")  # close panel — audio must continue
+            page.wait_for_timeout(400)
+            expect("playing" in page.locator("#btn-sounds").get_attribute("class"),
+                   "dock indicator lost after panel close")
+            page.click("#btn-sounds")
+            page.wait_for_timeout(400)
+            expect("playing" in page.locator(".sound-btn[data-sound='rain']").get_attribute("class"),
+                   "soundscape stopped when panel closed (regression)")
+            # play a second sound: must not throw (single AudioContext regression)
+            page.locator(".sound-btn[data-sound='ocean']").click()
+            page.wait_for_timeout(400)
+            expect(not console_errors, f"audio errors on second play: {console_errors[:2]}")
+            expect("playing" in page.locator(".sound-btn[data-sound='ocean']").get_attribute("class"),
+                   "second soundscape did not start")
+            page.click("#sound-stop")
+            page.wait_for_timeout(300)
+            expect("playing" not in (page.locator("#btn-sounds").get_attribute("class") or ""),
+                   "stop-all did not clear dock indicator")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+        check("sounds: survive panel close, replay safely, stop-all works", sounds_survive_panel_close)
+
+        def weather_popover():
+            page.click("#weather")
+            page.wait_for_timeout(300)
+            expect("open" in page.locator("#weather-detail").get_attribute("class"),
+                   "weather popover did not open")
+            page.click("#weather")
+            page.wait_for_timeout(300)
+            expect("open" not in (page.locator("#weather-detail").get_attribute("class") or ""),
+                   "weather popover did not close")
+        check("weather: pill toggles forecast popover", weather_popover)
+
+        def pomodoro_survives_reload():
+            page.keyboard.press("p")
+            page.wait_for_timeout(400)
+            page.click("#pomo-start")
+            page.wait_for_timeout(2300)
+            page.reload()
+            page.wait_for_timeout(1500)
+            page.keyboard.press("p")  # reopen panel after reload
+            page.wait_for_timeout(400)
+            face = page.locator("#pomo-face").inner_text()
+            expect(face.startswith("04:"), f"timer state lost after reload, face={face}")
+            expect("Pause" in page.locator("#pomo-start").inner_text(),
+                   "restored timer should still be running")
+            page.click("#pomo-start")  # pause
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+        check("pomodoro: running timer survives tab reload", pomodoro_survives_reload)
+
+        def pomo_auto_persists():
+            page.keyboard.press("p")
+            page.wait_for_timeout(300)
+            page.check("#pomo-auto")
+            page.wait_for_timeout(300)
+            stored = page.evaluate("new Promise(r => chrome.storage.sync.get('pomoAuto', r))")
+            expect(stored.get("pomoAuto") is True, "auto-start not persisted")
+            page.keyboard.press("Escape")
+        check("pomodoro: auto-start setting persists", pomo_auto_persists)
+
+        def search_bang():
+            page.route("**github.com/**", lambda route: route.fulfill(
+                status=200, body="<html>gh-ok</html>", content_type="text/html"))
+            page.fill("#search-input", "!gh playwright")
+            with page.expect_navigation(url="**github.com/**"):
+                page.evaluate("document.getElementById('search-form').requestSubmit()")
+            expect("github.com/search" in page.url and "playwright" in page.url,
+                   f"bang failed: {page.url}")
+            page.unroute("**github.com/**")
+            page.go_back()
+            page.wait_for_timeout(800)
+        check("search: !gh bang routes a one-shot engine search", search_bang)
+
+        def help_modal_flow():
+            page.keyboard.press("?")
+            page.wait_for_timeout(300)
+            expect(page.locator("#help-modal").is_visible(), "help modal did not open")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+            expect(not page.locator("#help-modal").is_visible(), "help modal did not close")
+        check("keyboard: ? opens shortcut cheat-sheet, Esc closes", help_modal_flow)
+
+        def quote_shuffle():
+            before = page.locator("#quote-text").inner_text()
+            changed = False
+            for _ in range(6):
+                page.click("#quote-box", position={"x": 20, "y": 20})
+                page.wait_for_timeout(450)
+                if page.locator("#quote-text").inner_text() != before:
+                    changed = True
+                    break
+            expect(changed, "clicking quote never shuffled it")
+        check("quote: clicking shuffles to a new quote", quote_shuffle)
+
+        def bg_playlist_mode():
+            png_b64 = ("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
+            page.route("**://playlist-test.example/**", lambda route: route.fulfill(
+                status=200, body=base64.b64decode(png_b64), content_type="image/png"))
+            page.click("#btn-settings")
+            page.wait_for_timeout(300)
+            page.select_option("#set-bg-mode", "playlist")
+            page.fill("#set-bg-playlist", "https://playlist-test.example/a.jpg")
+            page.locator("#set-bg-playlist").dispatch_event("change")
+            page.wait_for_timeout(800)
+            bg = page.locator("#bg-photo").get_attribute("style")
+            expect("playlist-test.example" in (bg or ""), f"playlist bg not applied: {bg}")
+            page.select_option("#set-bg-mode", "bing")
+            page.locator("#set-bg-mode").dispatch_event("change")
+            page.keyboard.press("Escape")
+            page.unroute("**://playlist-test.example/**")
+        check("background: playlist mode applies daily URL", bg_playlist_mode)
+
+        def sync_quota_fallback():
+            ok = page.evaluate("""async () => {
+                const ok = await Store.setSyncedSafe('quotaProbe', 'x'.repeat(9000));
+                const back = await Store.getSynced('quotaProbe', null);
+                return { ok, len: back ? back.length : 0 };
+            }""")
+            expect(ok["len"] == 9000,
+                   f"large value not recoverable after sync quota rejection: {ok}")
+            expect(ok["ok"] is False, "sync write should have reported failure")
+        check("storage: over-quota sync write safely falls back to local", sync_quota_fallback)
+
         def no_page_errors():
             expect(not console_errors, f"JS errors on page: {console_errors[:3]}")
         check("zero uncaught JS errors across the whole session", no_page_errors)
@@ -393,7 +636,7 @@ def browser_tests():
 
 def main():
     print("=" * 60)
-    print("DayStart v1.1.0 — automated test suite")
+    print("DayStart v1.2.0 — automated test suite")
     print("=" * 60)
     static_tests()
     browser_tests()
