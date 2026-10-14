@@ -106,24 +106,64 @@ const Sounds = (() => {
   }
 
   function night(ac) {
-    const { src } = loopingNoise(ac, "lowpass", 260, 0.5);
-    const crickets = setInterval(() => {
-      if (Math.random() < 0.65) {
-        const o = ac.createOscillator();
-        const g = ac.createGain();
-        o.type = "sine";
-        o.frequency.value = 4200 + Math.random() * 800;
-        const t0 = ac.currentTime;
-        for (let k = 0; k < 3; k++) {
-          g.gain.setValueAtTime(0.0001, t0 + k * 0.09);
-          g.gain.exponentialRampToValueAtTime(0.03, t0 + k * 0.09 + 0.02);
-          g.gain.exponentialRampToValueAtTime(0.0001, t0 + k * 0.09 + 0.07);
-        }
-        o.connect(g).connect(master);
-        o.start(t0); o.stop(t0 + 0.35);
+    /* Layered summer-night chorus:
+       - a soft low "night air" bed
+       - several close field crickets: chirps of 3-5 sine pulses (~4.2-4.8 kHz)
+       - distant crickets, quieter and higher, wide stereo field
+       - one trilling tree cricket with a fast continuous pulse train
+       Each voice schedules its own chirps on a randomized timer so the
+       chorus never sounds mechanical. All timers/nodes cleaned up on stop. */
+    const timers = [];
+    const stops = [loopingNoise(ac, "lowpass", 200, 0.4).src];
+
+    function cricket(opts) {
+      const { freq, gain, every, pulseMin, pulseMax, pulseGap, pan } = opts;
+      const out = ac.createGain();
+      out.gain.value = 0.0001;
+      if (ac.createStereoPanner) {
+        const panner = ac.createStereoPanner();
+        panner.pan.value = pan;
+        out.connect(panner).connect(master);
+      } else {
+        out.connect(master);
       }
-    }, 900);
-    return () => { clearInterval(crickets); try { src.stop(); } catch (e) {} };
+
+      function chirp() {
+        const n = pulseMin + Math.floor(Math.random() * (pulseMax - pulseMin + 1));
+        const f = freq + Math.random() * 320;
+        const t0 = ac.currentTime + 0.04;
+        for (let k = 0; k < n; k++) {
+          const ts = t0 + k * pulseGap;
+          out.gain.setValueAtTime(0.0001, ts);
+          out.gain.exponentialRampToValueAtTime(gain, ts + 0.012);
+          out.gain.exponentialRampToValueAtTime(0.0001, ts + pulseGap * 0.72);
+        }
+        const o = ac.createOscillator();
+        o.type = "sine";
+        o.frequency.value = f;
+        o.connect(out);
+        o.start(t0);
+        o.stop(t0 + n * pulseGap + 0.1);
+        const next = every[0] + Math.random() * (every[1] - every[0]);
+        timers.push(setTimeout(chirp, next * 1000));
+      }
+      timers.push(setTimeout(chirp, Math.random() * 900));
+    }
+
+    // close, full-sounding field crickets
+    cricket({ freq: 4250, gain: 0.035, every: [0.8, 1.9],  pulseMin: 3, pulseMax: 4, pulseGap: 0.075, pan: -0.55 });
+    cricket({ freq: 4550, gain: 0.032, every: [0.9, 2.2],  pulseMin: 3, pulseMax: 4, pulseGap: 0.07,  pan: 0.45 });
+    cricket({ freq: 4400, gain: 0.03,  every: [1.1, 2.6],  pulseMin: 3, pulseMax: 5, pulseGap: 0.08,  pan: -0.15 });
+    // distant crickets — quieter, higher, far sides
+    cricket({ freq: 5150, gain: 0.016, every: [1.0, 2.8],  pulseMin: 3, pulseMax: 5, pulseGap: 0.065, pan: -0.9 });
+    cricket({ freq: 5350, gain: 0.014, every: [1.3, 3.0],  pulseMin: 3, pulseMax: 5, pulseGap: 0.06,  pan: 0.85 });
+    // one slow trilling tree cricket in the background
+    cricket({ freq: 4700, gain: 0.012, every: [2.4, 4.5],  pulseMin: 9, pulseMax: 14, pulseGap: 0.046, pan: 0.2 });
+
+    return () => {
+      timers.forEach(clearTimeout);
+      stops.forEach((s) => { try { s.stop(); } catch (e) {} });
+    };
   }
 
   const GENERATORS = { rain, ocean, stream, wind, fire, night };

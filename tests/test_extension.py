@@ -103,8 +103,8 @@ def static_tests():
     def version_is_current():
         m = json.load(open(os.path.join(EXT, "manifest.json")))
         readme = open(os.path.join(EXT, "README.md")).read()
-        expect(m["version"] == "1.3.0", f"unexpected version: {m['version']}")
-        expect("version-1.3.0" in readme, "README badge version out of date")
+        expect(m["version"] == "1.4.0", f"unexpected version: {m['version']}")
+        expect("version-1.4.0" in readme, "README badge version out of date")
 
     check("manifest is valid MV3 with action + service worker", manifest_ok)
     check("all referenced files exist (icons, scripts, css)", referenced_files_exist)
@@ -635,6 +635,47 @@ def browser_tests():
                     break
             expect(changed, "clicking quote never shuffled it")
         check("quote: clicking shuffles to a new quote", quote_shuffle)
+
+        def night_soundscape():
+            page.keyboard.press("s")
+            page.wait_for_timeout(400)
+            page.click('[data-sound="night"]')
+            page.wait_for_timeout(500)
+            expect("playing" in (page.locator('[data-sound="night"]').get_attribute("class") or ""),
+                   "night soundscape did not start")
+            page.click("#sound-stop")
+            page.wait_for_timeout(300)
+            expect("playing" not in (page.locator('[data-sound="night"]').get_attribute("class") or ""),
+                   "stop-all did not stop the night soundscape")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(250)
+        check("sounds: night cricket chorus plays and stops", night_soundscape)
+
+        def quote_hero_centered():
+            inside = page.evaluate("!!document.querySelector('.center #quote-box')")
+            expect(inside, "quote is not inside the centered hero stack")
+            size = page.evaluate(
+                "parseFloat(getComputedStyle(document.getElementById('quote-text')).fontSize)")
+            expect(size >= 17, f"quote text too small: {size}px")
+            box = page.locator("#quote-box").bounding_box()
+            mid = box["x"] + box["width"] / 2
+            expect(abs(mid - page.viewport_size["width"] / 2) < 60,
+                   f"quote not horizontally centered: mid={mid:.0f}")
+        check("quote: bigger and centered in the hero stack", quote_hero_centered)
+
+        def settings_panel_scrollable():
+            page.click("#btn-settings")
+            page.wait_for_timeout(450)
+            panel = page.locator("#panel-settings")
+            overflow = panel.evaluate("el => getComputedStyle(el).overflowY")
+            expect(overflow in ("auto", "scroll"), f"settings overflowY={overflow}")
+            page.evaluate("document.getElementById('panel-settings').scrollTop = 99999")
+            page.wait_for_timeout(200)
+            st = panel.evaluate("el => el.scrollTop")
+            expect(st > 0, f"settings panel did not actually scroll (scrollTop={st})")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(250)
+        check("settings: panel scrolls its content", settings_panel_scrollable)
 
         def bg_playlist_mode():
             png_b64 = ("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")

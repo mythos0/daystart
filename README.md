@@ -2,7 +2,7 @@
 
 A calm, focused dashboard for every new tab in Chrome, Edge, Brave, Vivaldi and other Chromium browsers. DayStart replaces the default new tab page with a clean, personal workspace that combines the time, your daily focus, tasks, weather, shortcuts and focus tools in one thoughtfully designed view.
 
-![Version](https://img.shields.io/badge/version-1.3.0-blue) ![Chrome](https://img.shields.io/badge/browser-Chrome%20MV3-green) ![Tests](https://img.shields.io/badge/tests-41%2F41%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Version](https://img.shields.io/badge/version-1.4.0-blue) ![Chrome](https://img.shields.io/badge/browser-Chrome%20MV3-green) ![Tests](https://img.shields.io/badge/tests-44%2F44%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ---
 
@@ -19,7 +19,7 @@ The extension is completely free, requires no account, contains no advertising, 
 - **Personalized greeting** — a time-aware salutation (good morning, good afternoon, good evening) with your name, rendered in an elegant serif typeface.
 - **Live clock and date** — supports 12-hour and 24-hour formats, with an optional seconds display.
 - **Daily focus** — answer one question each morning: *“What is your main focus for today?”* Your answer stays on screen until you mark it complete or clear it, and it resets automatically at midnight.
-- **Quote of the day** — a curated collection of thirty motivational quotes and mantras, chosen deterministically so every user sees the same quote on the same day.
+- **Quote of the day** — a curated collection of thirty motivational quotes and mantras, chosen deterministically so every user sees the same quote on the same day. Shown large and centered in the hero stack, right under your daily focus; click it to shuffle.
 
 ### Productivity tools
 
@@ -36,7 +36,7 @@ The extension is completely free, requires no account, contains no advertising, 
 - **Daily wallpaper** — by default a high-resolution **curated daily photograph** (the Bing wallpaper archive, cached per day). Alternatives: a rotating nature-photo catalog, random rotation, a **custom image URL**, a **photo playlist** (one URL per line, advancing daily), and an offline gradient mode. Every source degrades gracefully — offline tabs never flash or break.
 - **Quick shortcuts** — a compact grid of up to twelve favorite destinations with automatic favicon lookup; sensible defaults are provided on first launch.
 - **Web search** — a search bar with six selectable engines: Google, DuckDuckGo, Bing, YouTube, GitHub and Wikipedia. `Tab` cycles engines, and one-shot **bangs** switch engine per query: `!gh playwright`, `!y lofi beats`, `!w zen garden` and friends.
-- **Soundscapes** — six ambient soundscapes (rain, ocean, stream, wind, fireplace, night) generated entirely with the Web Audio API. No audio files are downloaded, and playback works offline. Audio **keeps playing after the panel closes** (a pulsing dot on the dock indicates it), with a Stop-all button in the panel.
+- **Soundscapes** — six ambient soundscapes (rain, ocean, stream, wind, fireplace, night) generated entirely with the Web Audio API. No audio files are downloaded, and playback works offline. The **night** soundscape is a layered cricket chorus: several close field crickets, distant higher-pitched voices across the stereo field, a slow trilling tree cricket, and a soft night-air bed — all synthesized, never repeating mechanically. Audio **keeps playing after the panel closes** (a pulsing dot on the dock indicates it), with a Stop-all button in the panel.
 
 ### Personalization
 

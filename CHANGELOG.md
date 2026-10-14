@@ -3,6 +3,20 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.4.0] - 2026-10-14
+
+### Added
+- **Rebuilt night soundscape** — a layered summer-night cricket chorus: three close field crickets with randomized chirp pulses, two distant higher-pitched voices spread across the stereo field, a slow trilling tree cricket, and a soft low "night air" bed. Fully synthesized, never repeats mechanically.
+
+### Changed
+- **Quote of the day moved to the hero** — the daily motivation now sits large and centered under your daily focus instead of a small corner note (up to 25 px serif type, click to shuffle, subtle shuffle hint).
+- **Bigger, responsive widgets** — the left column scales with the viewport (`clamp`), widget body text is ~15 px, checkboxes, chips and favicons are larger, and a short-screen media query trims list heights so the hero never collides with the search bar.
+- **Higher-contrast interface** — brighter secondary text (0.92/0.72 alpha), more opaque glass panels with stronger borders and text shadows, larger buttons/dock/top-bar icons (46 px dock), bigger input type, visible placeholder text, and an amber keyboard-focus outline.
+- Side panels are wider (370 px) with a sticky opaque header.
+
+### Fixed
+- **Settings panel was not scrollable** — every side panel now scrolls its content (`overflow-y: auto` with contained overscroll), and the header stays pinned while long settings content scrolls beneath it.
+
 ## [1.3.0] - 2026-10-14
 
 ### Added
