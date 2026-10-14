@@ -258,6 +258,19 @@
     </div>
 
     <div class="settings-group">
+      <h3>New tab</h3>
+      <label class="field"><span>Take over new tabs</span>
+        <select id="set-force-newtab">
+          <option value="auto">Auto — only where the browser needs it</option>
+          <option value="on">Always</option>
+          <option value="off">Off — browser handles new tabs</option>
+        </select></label>
+      <div class="kbd-hint">Browsers like Vivaldi keep their own start page and ignore the
+        extension override. DayStart then redirects those default new tabs to
+        your dashboard. Details in the README (Vivaldi section).</div>
+    </div>
+
+    <div class="settings-group">
       <h3>Widgets</h3>
       <label class="check"><input type="checkbox" id="set-w-todo" checked> Todo list</label>
       <label class="check"><input type="checkbox" id="set-w-habits" checked> Habits</label>

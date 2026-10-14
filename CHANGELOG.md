@@ -3,6 +3,16 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.0] - 2026-10-14
+
+### Added
+- **New-tab takeover for Vivaldi and other browsers that ignore the new-tab override** (fixes the dashboard not appearing on new tabs in Vivaldi). The background service worker now recognizes tabs created on the browser's default new-tab page (`chrome://newtab`, `vivaldi://startpage`, `edge://newtab`, …) and redirects them to the DayStart dashboard. Automatic in Vivaldi (user-agent detection); also covers Edge, Brave, Opera and plain Chromium.
+- Settings → **New tab → Take over new tabs** with three modes: *Auto* (default — takeover only where the browser needs it), *Always*, and *Off*.
+- Optional `tabs` permission, required to identify default new-tab pages (disclosed in the README with an explicit privacy note; no tab data is read, stored, or transmitted beyond that check).
+
+### Fixed
+- Dashboard no longer fails to appear on new tabs in Vivaldi when the buried *Controlled by Extension* setting was missed or reset by an update.
+
 ## [1.2.0] - 2026-10-14
 
 ### Added

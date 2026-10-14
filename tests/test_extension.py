@@ -86,9 +86,31 @@ def static_tests():
                     expect("momentum" not in content.lower(),
                            f"restricted brand string found in {f}")
 
+    def vivaldi_takeover_wiring():
+        sw = open(os.path.join(EXT, "js", "service-worker.js")).read()
+        for pattern in ("vivaldi://startpage/", "chrome://newtab/", "chrome://new-tab-page/",
+                        "forceNewTab", "tabs.onCreated", "tabs.onUpdated",
+                        "tabs.update"):
+            expect(pattern in sw, f"service worker missing takeover piece: {pattern}")
+        m = json.load(open(os.path.join(EXT, "manifest.json")))
+        expect("tabs" in m["permissions"],
+               "'tabs' permission required to see default new-tab URLs")
+        html = open(os.path.join(EXT, "newtab.html")).read()
+        expect("set-force-newtab" in html, "settings control for takeover missing")
+        sjs = open(os.path.join(EXT, "js", "settings.js")).read()
+        expect("forceNewTab" in sjs, "settings.js does not persist forceNewTab")
+
+    def version_is_current():
+        m = json.load(open(os.path.join(EXT, "manifest.json")))
+        readme = open(os.path.join(EXT, "README.md")).read()
+        expect(m["version"] == "1.3.0", f"unexpected version: {m['version']}")
+        expect("version-1.3.0" in readme, "README badge version out of date")
+
     check("manifest is valid MV3 with action + service worker", manifest_ok)
     check("all referenced files exist (icons, scripts, css)", referenced_files_exist)
     check("no restricted branding anywhere in repo", no_restricted_branding)
+    check("vivaldi new-tab takeover fully wired (sw + manifest + settings)", vivaldi_takeover_wiring)
+    check("version bumped consistently (manifest + README)", version_is_current)
 
 
 # ----------------------------------------------------------------------
@@ -138,6 +160,22 @@ def browser_tests():
             has = page.evaluate("typeof chrome !== 'undefined' && !!(chrome.storage && chrome.storage.sync)")
             expect(has, "chrome.storage.sync unavailable on dashboard page")
         check("dashboard runs with chrome.storage available", test_chrome_storage_available)
+
+        def test_newtab_takeover():
+            # End-user guarantee: a tab the browser opens on its default
+            # new-tab page ends up showing the DayStart dashboard.
+            page.evaluate("() => chrome.storage.sync.set({forceNewTab: 'on'})")
+            tab_url = page.evaluate("""async () => {
+                const t = await chrome.tabs.create({url: 'chrome://newtab/', active: false});
+                await new Promise(r => setTimeout(r, 2500));
+                const got = await chrome.tabs.get(t.id);
+                return got.url || got.pendingUrl || '';
+            }""")
+            expect(tab_url.startswith("chrome-extension://"),
+                   f"tab landed on: {tab_url or 'unknown'}")
+            expect(tab_url.endswith("newtab.html"), f"unexpected tab url: {tab_url}")
+            page.evaluate("() => chrome.storage.sync.set({forceNewTab: 'auto'})")
+        check("new-tab takeover: default new tab lands on DayStart", test_newtab_takeover)
 
         def wipe():
             page.evaluate("""() => new Promise(res => {

@@ -18,6 +18,7 @@ const Settings = (() => {
     $("set-clock").value = await Store.getSetting("clockFormat", "24");
     $("set-seconds").checked = await Store.getSetting("clockSeconds", false);
     $("set-theme").value = await Store.getSetting("themeMode", "light");
+    $("set-force-newtab").value = await Store.getSetting("forceNewTab", "auto");
     $("set-units").value = await Store.getSetting("units", "c");
     $("set-city").value = await Store.getSetting("city", "");
     $("set-bg-mode").value = await Store.getSetting("bgMode", "bing");
@@ -81,6 +82,12 @@ const Settings = (() => {
     $("set-theme").addEventListener("change", async (e) => {
       await Store.setSetting("themeMode", e.target.value);
       await App.applyTheme();
+    });
+    $("set-force-newtab").addEventListener("change", async (e) => {
+      await Store.setSetting("forceNewTab", e.target.value);
+      App.toast(e.target.value === "off"
+        ? "DayStart will not touch new tabs"
+        : "DayStart will open on new tabs");
     });
     $("set-units").addEventListener("change", async (e) => {
       await Store.setSetting("units", e.target.value);

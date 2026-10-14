@@ -2,7 +2,7 @@
 
 A calm, focused dashboard for every new tab in Chrome, Edge, Brave, Vivaldi and other Chromium browsers. DayStart replaces the default new tab page with a clean, personal workspace that combines the time, your daily focus, tasks, weather, shortcuts and focus tools in one thoughtfully designed view.
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Chrome](https://img.shields.io/badge/browser-Chrome%20MV3-green) ![Tests](https://img.shields.io/badge/tests-38%2F38%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Version](https://img.shields.io/badge/version-1.3.0-blue) ![Chrome](https://img.shields.io/badge/browser-Chrome%20MV3-green) ![Tests](https://img.shields.io/badge/tests-41%2F41%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ---
 
@@ -84,15 +84,31 @@ Inside the search bar: `Tab` cycles the engine; `!gh`, `!y`, `!w`, `!d`, `!b`, `
 
 ### Vivaldi
 
-Vivaldi uses its own Start Page by default and requires one extra setting to hand the new tab to an extension. It works fully — the browser even ships a dedicated control for it:
+Vivaldi uses its own Start Page by default and silently ignores `chrome_url_overrides.newtab` unless a hidden browser setting is changed. DayStart handles this in two layers:
+
+**Layer 1 — automatic (default, v1.3+).** The extension detects Vivaldi and redirects every tab the browser opens on its default new-tab page to the DayStart dashboard. No browser settings are needed. If you prefer Vivaldi to keep its Start Page, open DayStart settings and set **New tab → Take over new tabs → Off**.
+
+**Layer 2 — native override (optional, the “proper” way).**
 
 1. Install the extension: open `vivaldi://extensions`, enable **Developer mode**, click **Load unpacked** and select the project folder. (To install from the Chrome Web Store instead, open the store in Vivaldi and confirm the *Allow extensions from other stores* prompt.)
-2. Copy the extension **ID** shown on its card in `vivaldi://extensions` (you will only need this for the fallback in step 4).
-3. Go to **Settings → Tabs → New Tab Page**.
-4. Select **Start Page**, then tick **Controlled by Extension** — Vivaldi will offer the newly installed dashboard. Pick it, and every new tab now opens DayStart.
-5. *Fallback (if your Vivaldi version does not offer the extension picker):* go to **Settings → General**, set **Homepage** to `chrome-extension://<ID-from-step-2>/newtab.html` and enable **Use Homepage as New Tab Page**. Also set **Startup with → Homepage** if you want it on launch.
+2. Go to **Settings → Tabs → New Tab Page**.
+3. Select **Start Page**, then tick **Controlled by Extension** — Vivaldi will offer the newly installed dashboard. Pick it, and every new tab natively opens DayStart.
+
+**Fallback (very old Vivaldi versions without the extension picker):** copy the extension **ID** from its card in `vivaldi://extensions`, then go to **Settings → General**, set **Homepage** to `chrome-extension://<ID>/newtab.html` and enable **Use Homepage as New Tab Page**.
+
+**Troubleshooting**
+
+| Symptom | Fix |
+|---------|-----|
+| New tab still shows the Start Page | Check DayStart settings → *Take over new tabs* is **Auto** or **Always**; then reload the extension in `vivaldi://extensions` |
+| Takeover stopped after a Vivaldi update | Re-tick **Controlled by Extension** (Layer 2), or just re-check the setting above — Layer 1 survives updates |
+| Toolbar icon missing | Click the puzzle icon → pin DayStart; the icon opens the dashboard from any page |
 
 **Toolbar button:** DayStart also adds a toolbar icon that opens the dashboard on click — pin it (click the puzzle icon → pin) for one-click access from any page, in any Chromium browser, regardless of new tab settings.
+
+### A note on the `tabs` permission
+
+Version 1.3 adds the optional `tabs` permission (browsers list it as “Read your browsing history”). It is required so the background worker can recognize *which* tab the browser just opened on its default new-tab page — without it, the takeover feature above cannot work. DayStart reads nothing else, stores nothing, and never sends any tab data anywhere; the whole extension runs locally with no analytics.
 
 ### Packaging a release
 
