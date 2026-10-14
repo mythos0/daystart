@@ -21,7 +21,8 @@ const Settings = (() => {
     $("set-force-newtab").value = await Store.getSetting("forceNewTab", "auto");
     $("set-units").value = await Store.getSetting("units", "c");
     $("set-city").value = await Store.getSetting("city", "");
-    $("set-bg-mode").value = await Store.getSetting("bgMode", "bing");
+    $("set-bg-mode").value = await Store.getSetting("bgMode", "curated");
+    $("set-bg-category").value = await Store.getSetting("bgCategory", "places");
     $("set-bg-url").value = await Store.getSetting("bgCustomUrl", "");
     $("set-bg-playlist").value = await Store.getSetting("bgPlaylist", "");
 
@@ -33,6 +34,13 @@ const Settings = (() => {
     });
 
     renderSwatches();
+    syncBgCategoryRow();
+  }
+
+  /* The collection picker only applies to the curated engine */
+  function syncBgCategoryRow() {
+    const row = $("field-bg-category");
+    if (row) row.hidden = $("set-bg-mode").value !== "curated";
   }
 
   function renderSwatches() {
@@ -44,9 +52,10 @@ const Settings = (() => {
       s.style.background = g;
       s.title = "Apply this gradient now";
       s.addEventListener("click", async () => {
-        document.getElementById("bg-photo").style.backgroundImage = g;
         await Store.setSetting("bgMode", "gradient");
         $("set-bg-mode").value = "gradient";
+        syncBgCategoryRow();
+        Background.refresh();
       });
       wrap.appendChild(s);
     });
@@ -99,6 +108,11 @@ const Settings = (() => {
     });
     $("set-bg-mode").addEventListener("change", async (e) => {
       await Store.setSetting("bgMode", e.target.value);
+      syncBgCategoryRow();
+      Background.refresh();
+    });
+    $("set-bg-category").addEventListener("change", async (e) => {
+      await Store.setSetting("bgCategory", e.target.value);
       Background.refresh();
     });
     $("set-bg-url").addEventListener("change", async (e) => {

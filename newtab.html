@@ -10,7 +10,21 @@
 
   <!-- Background layers -->
   <div id="bg-photo" role="presentation"></div>
+  <div id="bg-photo-b" role="presentation" aria-hidden="true"></div>
   <div id="bg-overlay" role="presentation"></div>
+
+  <!-- Wallpaper browsing (curated mode) -->
+  <div id="wallbar" class="wallbar">
+    <button id="wp-prev" class="wall-btn" title="Previous wallpaper" aria-label="Previous wallpaper">&#8249;</button>
+    <button id="wp-shuffle" class="wall-btn" title="Shuffle — new wallpaper" aria-label="Shuffle wallpaper">&#8635;</button>
+    <button id="wp-next" class="wall-btn" title="Next wallpaper" aria-label="Next wallpaper">&#8250;</button>
+    <span class="wall-sep" aria-hidden="true"></span>
+    <button id="wp-history" class="wall-btn wall-btn-wide" title="Wallpaper history" aria-label="Wallpaper history">&#9638;</button>
+  </div>
+  <div id="wp-history-pop" class="wp-history-pop" hidden>
+    <h3>Wallpaper history</h3>
+    <div id="wp-history-grid" class="wp-history-grid"></div>
+  </div>
 
   <!-- ============ Top bar ============ -->
   <header class="topbar">
@@ -284,13 +298,24 @@
       <h3>Background</h3>
       <label class="field"><span>Mode</span>
         <select id="set-bg-mode">
-          <option value="bing">Daily wallpaper (curated)</option>
-          <option value="daily">Nature photos, new every day</option>
+          <option value="curated">Curated collections — new photo every tab</option>
+          <option value="bing">Bing daily wallpaper</option>
+          <option value="daily">Nature photo, new every day</option>
           <option value="random">Random photo</option>
           <option value="custom">Custom image URL</option>
           <option value="playlist">Photo playlist (one per day)</option>
           <option value="gradient">Gradient (offline)</option>
         </select></label>
+      <label class="field" id="field-bg-category"><span>Collection</span>
+        <select id="set-bg-category">
+          <option value="places">Beautiful places — forests, hills &amp; more</option>
+          <option value="forest">Forest</option>
+          <option value="hills">Hills &amp; meadows</option>
+          <option value="mountains">Mountains</option>
+          <option value="ocean">Ocean &amp; lakes</option>
+          <option value="travel">Travel &amp; cities</option>
+        </select></label>
+      <p class="settings-hint">Every new tab brings a new photo. Browse with the arrows at the bottom-left, or open the grid button for your wallpaper history.</p>
       <label class="field"><span>Custom image URL</span>
         <input type="text" id="set-bg-url" maxlength="500" placeholder="https://example.com/photo.jpg"></label>
       <label class="field"><span>Playlist — one image URL per line</span>

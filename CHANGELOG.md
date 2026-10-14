@@ -3,6 +3,18 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.5.0] - 2026-10-14
+
+### Added
+- **Curated wallpaper collections** — a new default background engine with a hand-reviewed catalog of beautiful places: forests, hills, mountains, oceans and iconic travel destinations. Six collections selectable in settings: *Beautiful places* (default mix of forests, hills and scenic landscapes), *Forest*, *Hills & meadows*, *Mountains*, *Ocean & lakes*, *Travel & cities*. Every photograph was individually verified for quality.
+- **A new wallpaper in every tab** — the curated engine picks a fresh photo each time a new tab opens, avoiding an immediate repeat of the previous image.
+- **Wallpaper browsing** — a glass toolbar at the bottom-left with **previous / shuffle / next** buttons and a **history grid** popover (thumbnail previews of the last photos). History is stored locally and survives tabs and sessions; the current wallpaper is highlighted in the grid and a toast announces the collection and position. Crossfade transitions between photos via a two-layer renderer.
+- **README screenshots** — the documentation now includes real captures of the dashboard (light and dark), wallpaper history, journal, pomodoro, weather, soundscapes and settings.
+
+### Changed
+- Existing Bing-wallpaper installs are migrated once to the curated collections (the Bing daily wallpaper remains available in settings → Background → Mode).
+- Wallpaper changes are preloaded before display so tabs never flash, and every source still degrades gracefully to a gradient when offline.
+
 ## [1.4.0] - 2026-10-14
 
 ### Added

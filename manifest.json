@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "DayStart — New Tab Focus Dashboard",
+  "name": "DayStart \u2014 New Tab Focus Dashboard",
   "short_name": "DayStart",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Transform every new tab into a calm, focused dashboard: greeting, daily focus, tasks with priorities and due dates, habits, journal, weather, quick links, pomodoro, notes and soundscapes.",
   "author": "DayStart Contributors",
   "homepage_url": "https://github.com/mythos0/daystart",

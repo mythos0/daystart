@@ -103,13 +103,39 @@ def static_tests():
     def version_is_current():
         m = json.load(open(os.path.join(EXT, "manifest.json")))
         readme = open(os.path.join(EXT, "README.md")).read()
-        expect(m["version"] == "1.4.0", f"unexpected version: {m['version']}")
-        expect("version-1.4.0" in readme, "README badge version out of date")
+        expect(m["version"] == "1.5.0", f"unexpected version: {m['version']}")
+        expect("version-1.5.0" in readme, "README badge version out of date")
+
+    def curated_wallpaper_catalog():
+        bg = open(os.path.join(EXT, "js", "background.js")).read()
+        cats = {}
+        for cat in ("forest", "hills", "mountains", "ocean", "travel", "places"):
+            m = re.search(rf"\b{cat}:\s*\[(.*?)\]", bg, re.S)
+            expect(m, f"catalog category missing: {cat}")
+            ids = [int(x) for x in re.findall(r"\d+", m.group(1))]
+            expect(len(ids) >= 15, f"category {cat} too small: {len(ids)}")
+            cats[cat] = set(ids)
+        expect('getSetting("bgMode", "curated")' in bg,
+               "curated is not the default wallpaper mode")
+        # default mix must lean on forests + hills as requested
+        overlap = cats["places"] & (cats["forest"] | cats["hills"])
+        expect(len(overlap) >= 15,
+               f"default 'places' mix lacks forest/hills photos: {len(overlap)}")
+        html = open(os.path.join(EXT, "newtab.html")).read()
+        for el in ("wp-prev", "wp-next", "wp-shuffle", "wp-history",
+                   "wp-history-grid", "set-bg-category", "bg-photo-b"):
+            expect(f'id="{el}"' in html, f"wallpaper element missing: {el}")
+        sjs = open(os.path.join(EXT, "js", "settings.js")).read()
+        expect("bgCategory" in sjs, "settings.js does not persist bgCategory")
+        css = open(os.path.join(EXT, "css", "style.css")).read()
+        expect(".wp-history-grid" in css and ".wall-btn" in css,
+               "wallpaper browsing CSS missing")
 
     check("manifest is valid MV3 with action + service worker", manifest_ok)
     check("all referenced files exist (icons, scripts, css)", referenced_files_exist)
     check("no restricted branding anywhere in repo", no_restricted_branding)
     check("vivaldi new-tab takeover fully wired (sw + manifest + settings)", vivaldi_takeover_wiring)
+    check("curated wallpaper catalog + browsing UI fully wired", curated_wallpaper_catalog)
     check("version bumped consistently (manifest + README)", version_is_current)
 
 
@@ -687,13 +713,141 @@ def browser_tests():
             page.fill("#set-bg-playlist", "https://playlist-test.example/a.jpg")
             page.locator("#set-bg-playlist").dispatch_event("change")
             page.wait_for_timeout(800)
-            bg = page.locator("#bg-photo").get_attribute("style")
+            bg = " ".join(filter(None, [
+                page.locator("#bg-photo").get_attribute("style") or "",
+                page.locator("#bg-photo-b").get_attribute("style") or ""]))
             expect("playlist-test.example" in (bg or ""), f"playlist bg not applied: {bg}")
             page.select_option("#set-bg-mode", "bing")
             page.locator("#set-bg-mode").dispatch_event("change")
             page.keyboard.press("Escape")
             page.unroute("**://playlist-test.example/**")
         check("background: playlist mode applies daily URL", bg_playlist_mode)
+
+        # ------------------- v1.5.0 curated wallpaper tests -------------------
+        FOREST_IDS = []
+        m = re.search(r"\bforest:\s*\[(.*?)\]",
+                      open(os.path.join(EXT, "js", "background.js")).read(), re.S)
+        FOREST_IDS = [int(x) for x in re.findall(r"\d+", m.group(1))]
+
+        def current_wall_id():
+            return page.evaluate("""() => {
+                for (const el of [document.getElementById('bg-photo'),
+                                  document.getElementById('bg-photo-b')])
+                    if (el.classList.contains('bg-visible')) {
+                        const m = (el.style.backgroundImage || '')
+                            .match(/picsum\\.photos\\/id\\/(\\d+)/);
+                        if (m) return parseInt(m[1], 10);
+                    }
+                return null;
+            }""")
+
+        def hist_len():
+            return page.evaluate(
+                "Store.getData('bgHist', null).then(h => (h && h.ids) ? h.ids.length : 0)")
+
+        def wait_wall_id(timeout_ms=6000):
+            """Read the visible wallpaper id, tolerating slow photo loads."""
+            import time as _t
+            end = _t.time() + timeout_ms / 1000
+            last = None
+            while _t.time() < end:
+                last = current_wall_id()
+                if last is not None:
+                    return last
+                page.wait_for_timeout(300)
+            return last
+
+        def wait_wall_change(from_id, timeout_ms=9000):
+            """Wait until the visible wallpaper id differs from from_id."""
+            import time as _t
+            end = _t.time() + timeout_ms / 1000
+            while _t.time() < end:
+                cur = current_wall_id()
+                if cur is not None and cur != from_id:
+                    return cur
+                page.wait_for_timeout(300)
+            return current_wall_id()
+
+        def curated_default_on():
+            page.select_option("#set-bg-mode", "curated")
+            page.locator("#set-bg-mode").dispatch_event("change")
+            page.wait_for_timeout(500)
+            expect(page.locator("#wallbar").is_visible(),
+                   "wallpaper browser bar not visible in curated mode")
+            expect(wait_wall_id(9000) is not None,
+                   "no curated wallpaper applied on load")
+        check("wallpaper: curated is default, bar visible, photo applied", curated_default_on)
+
+        def curated_prev_next():
+            first = wait_wall_id()
+            expect(first is not None, "no wallpaper visible before browsing")
+            page.click("#wp-next")
+            second = wait_wall_change(first)
+            expect(second is not None,
+                   f"next did not bring a new wallpaper ({first} -> {second})")
+            page.click("#wp-prev")
+            back = wait_wall_change(second)
+            expect(back == first,
+                   f"prev did not restore the earlier wallpaper ({back} != {first})")
+            page.click("#wp-next")
+            page.wait_for_timeout(700)
+        check("wallpaper: prev/next browse the wallpaper history", curated_prev_next)
+
+        def curated_shuffle():
+            before = wait_wall_id()
+            page.click("#wp-shuffle")
+            after = wait_wall_change(before)
+            expect(after is not None,
+                   f"shuffle did not change the wallpaper ({before} -> {after})")
+        check("wallpaper: shuffle brings a fresh photo", curated_shuffle)
+
+        def curated_history_popover():
+            page.click("#wp-history")
+            page.wait_for_timeout(500)
+            grid = page.locator("#wp-history-grid")
+            expect(grid.is_visible(), "history popover did not open")
+            n_cells = grid.locator(".wp-cell").count()
+            expect(n_cells >= 3, f"history grid too empty: {n_cells} cells")
+            expect(grid.locator(".wp-cell.wp-current").count() == 1,
+                   "current wallpaper not highlighted in history")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(250)
+        check("wallpaper: history popover lists browsable thumbnails", curated_history_popover)
+
+        def curated_per_tab_rotation():
+            before_id = wait_wall_id()
+            before_n = hist_len()
+            page.reload()
+            page.wait_for_timeout(1800)
+            after_id = wait_wall_change(before_id)
+            after_n = hist_len()
+            expect(after_id is not None and after_id != before_id,
+                   f"reload did not bring a new wallpaper ({before_id} -> {after_id})")
+            expect(after_n == before_n + 1,
+                   f"history did not grow on new tab: {before_n} -> {after_n}")
+        check("wallpaper: every new tab shows a new photo (history grows)", curated_per_tab_rotation)
+
+        def curated_category_forest():
+            page.click("#btn-settings")
+            page.wait_for_timeout(400)
+            expect(page.locator("#field-bg-category").is_visible(),
+                   "collection picker hidden while curated mode is active")
+            page.select_option("#set-bg-category", "forest")
+            page.locator("#set-bg-category").dispatch_event("change")
+            page.wait_for_timeout(600)
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(250)
+            cid = wait_wall_id(9000)
+            expect(cid in FOREST_IDS,
+                   f"forest category applied a non-forest photo: {cid}")
+            # restore the default mix for later checks
+            page.click("#btn-settings")
+            page.wait_for_timeout(300)
+            page.select_option("#set-bg-category", "places")
+            page.locator("#set-bg-category").dispatch_event("change")
+            page.wait_for_timeout(600)
+            page.keyboard.press("Escape")
+        check("wallpaper: forest collection applies a forest photo", curated_category_forest)
 
         def sync_quota_fallback():
             ok = page.evaluate("""async () => {

@@ -2,7 +2,24 @@
 
 A calm, focused dashboard for every new tab in Chrome, Edge, Brave, Vivaldi and other Chromium browsers. DayStart replaces the default new tab page with a clean, personal workspace that combines the time, your daily focus, tasks, weather, shortcuts and focus tools in one thoughtfully designed view.
 
-![Version](https://img.shields.io/badge/version-1.4.0-blue) ![Chrome](https://img.shields.io/badge/browser-Chrome%20MV3-green) ![Tests](https://img.shields.io/badge/tests-44%2F44%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Version](https://img.shields.io/badge/version-1.5.0-blue) ![Chrome](https://img.shields.io/badge/browser-Chrome%20MV3-green) ![Tests](https://img.shields.io/badge/tests-51%2F51%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+
+---
+
+## Screenshots
+
+![DayStart dashboard](screenshots/dashboard.jpg)
+
+| | |
+|---|---|
+| ![Dark mode](screenshots/dashboard-dark.jpg) | ![Wallpaper history](screenshots/wallpaper-history.jpg) |
+| *Dark mode* | *Wallpaper history & browsing* |
+| ![Journal](screenshots/journal.jpg) | ![Pomodoro](screenshots/pomodoro.jpg) |
+| *Daily journal* | *Pomodoro timer* |
+| ![Weather](screenshots/weather.jpg) | ![Soundscapes](screenshots/sounds.jpg) |
+| *Weather forecast* | *Soundscapes* |
+| ![Settings](screenshots/settings.jpg) | |
+| *Settings* | |
 
 ---
 
@@ -33,7 +50,7 @@ The extension is completely free, requires no account, contains no advertising, 
 ### Environment and context
 
 - **Weather widget** — current conditions plus a three-day forecast with icons and high/low temperatures in a popover, powered by the free, keyless [Open-Meteo](https://open-meteo.com) API. Location is detected automatically (with your permission; coordinates are cached for seven days so the permission prompt is not repeated) or set manually to any city worldwide. Celsius and Fahrenheit are both supported. Responses are cached for thirty minutes.
-- **Daily wallpaper** — by default a high-resolution **curated daily photograph** (the Bing wallpaper archive, cached per day). Alternatives: a rotating nature-photo catalog, random rotation, a **custom image URL**, a **photo playlist** (one URL per line, advancing daily), and an offline gradient mode. Every source degrades gracefully — offline tabs never flash or break.
+- **Daily wallpaper — curated collections** — every new tab brings a new photograph from a hand-picked catalog of the most beautiful places on Earth: forests, hills, mountains, oceans and iconic destinations. Choose a preferred collection in settings (**Beautiful places** by default, which mixes forests, hills and scenic landscapes; or **Forest**, **Hills & meadows**, **Mountains**, **Ocean & lakes**, **Travel & cities**). Browse with the **‹ prev / next ›** arrows at the bottom-left, shuffle for an instant new photo, or open the **history grid** to jump back to any wallpaper you have seen — your wallpaper history is remembered across tabs and sessions. Alternatives: the Bing daily wallpaper, a rotating nature catalog, random rotation, a **custom image URL**, a **photo playlist** (one URL per line, advancing daily), and an offline gradient mode. Every source degrades gracefully — offline tabs never flash or break.
 - **Quick shortcuts** — a compact grid of up to twelve favorite destinations with automatic favicon lookup; sensible defaults are provided on first launch.
 - **Web search** — a search bar with six selectable engines: Google, DuckDuckGo, Bing, YouTube, GitHub and Wikipedia. `Tab` cycles engines, and one-shot **bangs** switch engine per query: `!gh playwright`, `!y lofi beats`, `!w zen garden` and friends.
 - **Soundscapes** — six ambient soundscapes (rain, ocean, stream, wind, fireplace, night) generated entirely with the Web Audio API. No audio files are downloaded, and playback works offline. The **night** soundscape is a layered cricket chorus: several close field crickets, distant higher-pitched voices across the stereo field, a slow trilling tree cricket, and a soft night-air bed — all synthesized, never repeating mechanically. Audio **keeps playing after the panel closes** (a pulsing dot on the dock indicates it), with a Stop-all button in the panel.
@@ -43,7 +60,7 @@ The extension is completely free, requires no account, contains no advertising, 
 - **Zen mode** — hides every widget and leaves only the clock and your focus. Ideal for deep work.
 - **Theme system** — light, dark, or **auto** (switches to dark automatically at night and back at sunrise).
 - **Widget visibility** — every dashboard widget can be shown or hidden independently in settings.
-- **Background modes** — curated daily wallpaper, nature catalog, random, custom URL, photo playlist, or a hand-tuned gradient (works fully offline, with six quick swatches).
+- **Background modes** — curated collections (new photo every tab, with prev/next history browsing), Bing daily wallpaper, nature catalog, random, custom URL, photo playlist, or a hand-tuned gradient (works fully offline, with six quick swatches).
 - **Entrance animation & reduced motion** — the dashboard elements rise in with a soft stagger, and every animation is disabled automatically for users who prefer reduced motion.
 
 ### Privacy and data ownership
@@ -115,7 +132,7 @@ Version 1.3 adds the optional `tabs` permission (browsers list it as “Read you
 Run the following command from the repository root to produce an installable archive:
 
 ```bash
-zip -r daystart-v1.0.0.zip . -x "*.git*" -x "*.md"
+zip -r daystart.zip . -x "*.git*" -x "*.md" -x "screenshots/*" -x "tests/*"
 ```
 
 The resulting `.zip` can be uploaded to the Chrome Web Store or loaded locally.
@@ -132,7 +149,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 ## Testing
 
-The repository ships an automated end-to-end suite (`tests/test_extension.py`, Playwright) that loads the real extension into headless Chromium and verifies the service worker, onboarding, every widget, the journal, todo power-ups (priority, due dates, drag & drop), timer persistence, audio behavior, storage quota fallback, migration and error-free execution — 38 checks in total. See [tests/README.md](tests/README.md).
+The repository ships an automated end-to-end suite (`tests/test_extension.py`, Playwright) that loads the real extension into headless Chromium and verifies the service worker, onboarding, every widget, the journal, todo power-ups (priority, due dates, drag & drop), timer persistence, audio behavior, storage quota fallback, migration, the curated wallpaper engine (per-tab rotation, prev/next history, collections) and error-free execution — 51 checks in total. See [tests/README.md](tests/README.md).
 
 ```bash
 python3 tests/test_extension.py
@@ -147,7 +164,7 @@ daystart/
 ├── css/
 │   └── style.css          # Complete stylesheet
 ├── js/
-│   ├── service-worker.js  # Toolbar button: open dashboard
+│   ├── service-worker.js  # Toolbar button + new-tab takeover
 │   ├── storage.js         # Storage abstraction (sync / local / fallback)
 │   ├── app.js             # Bootstrap, shortcuts, themes, zen mode
 │   ├── clock.js           # Clock, date, greeting
@@ -158,7 +175,7 @@ daystart/
 │   ├── links.js           # Quick shortcuts
 │   ├── quote.js           # Quote of the day
 │   ├── weather.js         # Open-Meteo weather widget
-│   ├── background.js      # Curated daily wallpaper & fallbacks
+│   ├── background.js      # Curated wallpaper collections, history, fallbacks
 │   ├── search.js          # Multi-engine search with bangs
 │   ├── pomodoro.js        # Pomodoro timer (state persisted across reloads)
 │   ├── journal.js         # Daily journal: prompt, mood, gratitude
@@ -166,6 +183,7 @@ daystart/
 │   ├── sounds.js          # Web Audio soundscapes
 │   ├── panels.js          # Side-panel manager
 │   └── settings.js        # Settings panel
+├── screenshots/           # README imagery
 ├── tests/                 # Playwright end-to-end suite
 └── icons/                 # Extension icons (16 / 32 / 48 / 128 px)
 ```
